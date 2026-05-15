@@ -54,17 +54,17 @@ g++ -std=c++17 preprocessor.cpp -o preprocessor
 
 _실행 완료 시 `output_sequence` 폴더에 `[파일명]_seq1.txt`, `[파일명]_seq2.txt` 등의 파일이 자동 생성됩니다._
 
-### Step 2. Execution via CLI
+### Step 2. Execution
 
-전처리된 파일의 **상대 경로를 명령줄 인수(Command Line Arguments)로 직접 넘겨주어** 연산을 수행합니다.
+`1_sw_implement` 디렉토리에서 전처리된 파일의 **이름만** 인수로 전달하여 실행합니다.
+_(내부적으로 `../0_preprocessing/output_sequence/` 베이스 경로를 자동으로 병합하도록 설계되어 있어 긴 상대 경로를 입력할 필요가 없습니다.)_
 
-**[CPU Baseline 실행]**
+**[CPU Baseline]**
 
-```bash
-cd ../1_sw_implement
+````bash
+cd 1_sw_implement
 g++ -std=c++17 sw_cpu.cpp -o sw_cpu
-./sw_cpu ../0_preprocessing/output_sequence/H2B10_seq1.txt ../0_preprocessing/output_sequence/H2B11_seq2.txt
-
+./sw_cpu example_seq1.txt example_seq2.txt
 ```
 
 **[GPU 가속 커널 실행]**
@@ -73,7 +73,7 @@ g++ -std=c++17 sw_cpu.cpp -o sw_cpu
 nvcc -std=c++17 sw_gpu.cu -o sw_gpu
 ./sw_gpu ../0_preprocessing/output_sequence/H2B10_seq1.txt ../0_preprocessing/output_sequence/H2B11_seq2.txt
 
-```
+````
 
 ## 📊 5. Evaluation Metrics
 
