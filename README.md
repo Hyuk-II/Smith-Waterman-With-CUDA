@@ -71,8 +71,7 @@ g++ -std=c++17 sw_cpu.cpp -o sw_cpu
 
 ```bash
 nvcc -std=c++17 sw_gpu.cu -o sw_gpu
-./sw_gpu ../0_preprocessing/output_sequence/H2B10_seq1.txt ../0_preprocessing/output_sequence/H2B11_seq2.txt
-
+./sw_gpu example_seq1.txt example_seq2.txt
 ````
 
 ## 📊 5. Evaluation Metrics
@@ -82,3 +81,7 @@ nvcc -std=c++17 sw_gpu.cu -o sw_gpu
 1. **GCUPS (Giga Cell Updates Per Second):** 초당 셀 계산량 (CPU 대비 전체 알고리즘의 실질적 가속비)
 2. **Memory Bandwidth:** 전역 메모리 vs 공유 메모리 도입에 따른 대역폭 포화도 (Nsight Compute 활용)
 3. **Hardware Occupancy:** 파도타기 비효율 구간(유휴 스레드)을 상쇄하기 위한 SM 스케줄링 점유율 분석
+
+```
+
+```
