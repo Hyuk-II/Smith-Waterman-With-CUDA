@@ -1,6 +1,8 @@
-#include "sequence_encoder.h"
+#include "sequence_codec.h"
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -19,9 +21,21 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SequenceEncoder sequence_encoder = SequenceEncoder();
-    vector<uint8_t> seq1_int = sequence_encoder.encode(sequences[0]);
-    vector<uint8_t> seq2_int = sequence_encoder.encode(sequences[1]);
+    SequenceCodec codec = SequenceCodec();
+    vector<int> seq1_int = codec.encode(sequences[0]);
+    vector<int> seq2_int = codec.encode(sequences[1]);
+
+    for (int i = 0; i < seq1_int.size(); i++) {
+        cout << seq1_int[i] << " ";
+    }
+    cout << endl;
+
+    for (int i = 0; i < seq2_int.size(); i++) {
+        cout << seq2_int[i] << " ";
+    }
+
+    cout << codec.decode(seq1_int) << endl;
+    cout << codec.decode(seq2_int) << endl;
 
     return 0;
 }
