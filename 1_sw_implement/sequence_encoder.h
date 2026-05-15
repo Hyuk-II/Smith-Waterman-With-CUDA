@@ -1,5 +1,9 @@
+#pragma once
+
+#include <cstdint>
 #include <string>
 #include <vector>
+
 using namespace std;
 
 class SequenceEncoder {
@@ -7,7 +11,7 @@ class SequenceEncoder {
     int ascii_2_index[128]; // 아스키코드 매핑 테이블
 
   public:
-    SequenceEncoder(int size) {
+    SequenceEncoder() {
         for (int i = 0; i < 128; i++) {
             // 테이블 초기화
             ascii_2_index[i] = 20; // 20 안쓰는 값
@@ -39,9 +43,9 @@ class SequenceEncoder {
         ascii_2_index['-'] = 21;
     }
 
-    vector<int> encode(string &sequence) {
+    vector<uint8_t> encode(string &sequence) {
         int len = sequence.length();
-        vector<int> encode_seq(len);
+        vector<uint8_t> encode_seq(len);
 
         for (int i = 0; i < len; i++) {
             encode_seq[i] = ascii_2_index[sequence[i]]; // 문자 배열 정수로 매핑

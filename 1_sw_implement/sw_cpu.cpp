@@ -1,8 +1,10 @@
+#include "sequence_encoder.h"
 #include <fstream>
 #include <iostream>
-#include <string>
 
 using namespace std;
+
+vector<string> getSequences(char *argv[]);
 
 int main(int argc, char *argv[]) {
     // 명령줄 인수 개수 검증
@@ -11,6 +13,21 @@ int main(int argc, char *argv[]) {
         cerr << "예시: ./sw_cpu example_seq1.txt example_seq2.txt" << endl;
         return 1;
     }
+
+    vector<string> sequences = getSequences(argv);
+    if (sequences.size() == 0) {
+        return 1;
+    }
+
+    SequenceEncoder sequence_encoder = SequenceEncoder();
+    vector<uint8_t> seq1_int = sequence_encoder.encode(sequences[0]);
+    vector<uint8_t> seq2_int = sequence_encoder.encode(sequences[1]);
+
+    return 0;
+}
+
+vector<string> getSequences(char *argv[]) {
+    vector<string> sequences;
 
     // 상대 경로 디렉토리 설정
     const string BASE_DIR = "../0_preprocessing/output_sequence/";
@@ -28,7 +45,7 @@ int main(int argc, char *argv[]) {
     if (!in1.is_open()) {
         cerr << "[에러] 파일을 열 수 없습니다. 파일명을 다시 확인하세요: "
              << file1_path << endl;
-        return 1;
+        return sequences;
     }
     string seq1;
     in1 >> seq1;
@@ -39,7 +56,7 @@ int main(int argc, char *argv[]) {
     if (!in2.is_open()) {
         cerr << "[에러] 파일을 열 수 없습니다. 파일명을 다시 확인하세요: "
              << file2_path << endl;
-        return 1;
+        return sequences;
     }
     string seq2;
     in2 >> seq2;
@@ -64,5 +81,8 @@ int main(int argc, char *argv[]) {
         cout << "내용: " << seq2 << endl;
     }
 
-    return 0;
+    sequences.push_back(seq1);
+    sequences.push_back(seq2);
+
+    return sequences;
 }
