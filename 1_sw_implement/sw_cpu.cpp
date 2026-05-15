@@ -6,7 +6,8 @@
 
 using namespace std;
 
-vector<string> getSequences(char *argv[]);
+vector<string> get_sequences(char *);
+vector<int> smith_waterman_cpu(vector<string>);
 
 int main(int argc, char *argv[]) {
     // 명령줄 인수 개수 검증
@@ -16,7 +17,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    vector<string> sequences = getSequences(argv);
+    vector<string> sequences = get_sequences(argv);
     if (sequences.size() == 0) {
         return 1;
     }
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-vector<string> getSequences(char *argv[]) {
+vector<string> get_sequences(char *argv[]) {
     vector<string> sequences;
 
     // 상대 경로 디렉토리 설정
@@ -100,3 +101,5 @@ vector<string> getSequences(char *argv[]) {
 
     return sequences;
 }
+
+vector<int> smith_waterman_cpu(vector<string> sequences) {}
