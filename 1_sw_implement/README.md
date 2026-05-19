@@ -6,7 +6,8 @@
 
 단순 문자열 기반 매칭은 필연적으로 내부 조건문(`if (seq1 == seq2)`)을 요구합니다. 이러한 조건 분기(Branch)는 CPU의 Pipeline Stall을 유발하고, 특히 GPU 환경에서는 코어 간의 동기화를 깨뜨리는 **워프 발산**의 주범이 됩니다.
 서열을 정수로 인코딩해 두면, 조건문 없이 BLOSUM62와 같은 2차원 치환 행렬의 인덱스로 즉시 매핑하여 `score_matrix[seq1[i]][seq2[j]]` 형태로 $O(1)$ 시간에 점수를 도출할 수 있습니다.
-<img width="527" height="526" alt="image" src="https://github.com/user-attachments/assets/fa7cf76a-a5ed-44fd-b465-b3830de20919" />
+
+<center><img width="527" height="526" alt="image" src="https://github.com/user-attachments/assets/fa7cf76a-a5ed-44fd-b465-b3830de20919" /></center>
 
 ### 2. Memory Density와 Cache Hit 활용
 
