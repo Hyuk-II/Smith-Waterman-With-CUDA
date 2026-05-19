@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 using namespace std;
+const int MATCH_SCORE = 3;
+const int MISMATCH_SCORE = -3;
+const int GAP_PENALTY = -2;
 
 vector<string> get_sequences(char *argv[]) {
     vector<string> sequences;
@@ -64,4 +67,74 @@ vector<string> get_sequences(char *argv[]) {
     sequences.push_back(seq2);
 
     return sequences;
+}
+
+// 2개의 문자열의 score_table에서, 가장 유사한 문자열을 추적하여 출력하는 함수
+void run_traceback(const vector<int> &score_table, const string &seq1,
+                   const string &seq2, const vector<int> &seq1_int,
+                   const vector<int> &seq2_int, int cols, int max_i,
+                   int max_j) {
+    cout << "\n=== 트레이스백 (Traceback) 시작 ===" << endl;
+
+    // DP 테이블 1차원 인덱싱 람다 (트레이스백 전용)
+    auto get_idx = [&](int r, int c) { return r * cols + c; };
+
+    string align1 = "";
+    string align2 = "";
+    string match_line = "";
+
+    int curr_i = max_i;
+    int curr_j = max_j;
+
+    // 경로 추적, 현재 최댓값인 점수가, 대각선, 위, 왼쪽, 어디에서 온것인지
+    // 확인하고 해당하는 문자로 문자열 구성
+    while (curr_i > 0 && curr_j > 0 &&
+           score_table[get_idx(curr_i, curr_j)] > 0) {
+
+        int current_score = score_table[get_idx(curr_i, curr_j)];
+        int match_mis_score = (seq1_int[curr_i - 1] == seq2_int[curr_j - 1])
+                                  ? MATCH_SCORE
+                                  : MISMATCH_SCORE;
+
+        // 대각선 (Match/Mismatch)
+        if (current_score ==
+            score_table[get_idx(curr_i - 1, curr_j - 1)] + match_mis_score) {
+            align1 += seq1[curr_i - 1];
+            align2 += seq2[curr_j - 1];
+
+            if (seq1_int[curr_i - 1] == seq2_int[curr_j - 1]) {
+                match_line += "|";
+            } else {
+                match_line += " ";
+            }
+            curr_i--;
+            curr_j--;
+        }
+        // 2. 위 (Insert)
+        else if (current_score ==
+                 score_table[get_idx(curr_i - 1, curr_j)] + GAP_PENALTY) {
+            align1 += seq1[curr_i - 1];
+            align2 += '-';
+            match_line += " ";
+            curr_i--;
+        }
+        // 3. 왼쪽 (Delete)
+        else if (current_score ==
+                 score_table[get_idx(curr_i, curr_j - 1)] + GAP_PENALTY) {
+            align1 += '-';
+            align2 += seq2[curr_j - 1];
+            match_line += " ";
+            curr_j--;
+        }
+    }
+
+    reverse(align1.begin(), align1.end());
+    reverse(align2.begin(), align2.end());
+    reverse(match_line.begin(), match_line.end());
+
+    cout << "\n[최적 로컬 정렬 결과]" << endl;
+    cout << "Seq 1: " << align1 << endl;
+    cout << "Match: " << match_line << endl;
+    cout << "Seq 2: " << align2 << endl;
+    cout << "정렬 길이: " << align1.length() << " AA\n" << endl;
 }
