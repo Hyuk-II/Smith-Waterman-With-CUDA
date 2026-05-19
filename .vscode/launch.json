@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/jaehyuk/Desktop/DGU/4-1/병렬처리/프로젝트",
+      "program": "/Users/jaehyuk/Desktop/DGU/4-1/병렬처리/프로젝트/build/Debug/outDebug"
+    }
+  ]
+}
