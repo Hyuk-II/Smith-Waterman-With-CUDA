@@ -19,24 +19,24 @@
 
 ## 📂 3. 디렉토리 구조 (Directory Structure)
 
-프로젝트는 데이터 정제(Preprocessing)와 실제 연산(Implementation) 파이프라인이 분리되어 있습니다.
+본 프로젝트는 유지보수성과 확장성에 집중하기 위해 핵심 연산 로직과 공통 유틸리티 함수를 분리하여, 모듈화 아키텍처를 채택하고 있습니다.
 
 ```text
 sw_gpu_accelerator/
 ├── 0_preprocessing/
-│   ├── input_fasta/          # 사용자가 다운로드한 원본 .fasta 파일 위치
-│   ├── output_sequence/      # 추출된 순수 염기/아미노산 서열(.txt) 저장소
-│   ├── preprocessor.cpp      # C++17 기반 대량 FASTA 자동 파싱 및 추출기
-│   └── README.md             # 전처리 파이프라인 사용 가이드
+│   ├── input_fasta/          # 원본 .fasta 데이터 보관
+│   ├── output_sequence/      # 파싱 완료된 순수 서열(.txt) 자동 저장소
+│   ├── preprocessor.cpp      # C++17 기반 멀티 파일 전처리 엔진
+│   └── README.md             # 전처리 단계 실행 상세 가이드
 │
 ├── 1_sw_implement/
-│   ├── sequence_encoder.h    # ASCII -> uint8_t 초고속 변환 클래스
-│   ├── sw_cpu.cpp            # CPU 순차 처리 Baseline (결과 검증용)
-│   ├── sw_gpu.cu             # CUDA 기반 핵심 병렬 가속 커널
-│   └── README.md             # 연산기 빌드 및 실행 가이드
+│   ├── sequence_codec.h      # 서열 문자열 <-> 정수(uint8_t) 양방향 매핑 모듈
+│   ├── functions.h           # 공통 유틸리티 함수 모음
+│   ├── sw_cpu.cpp            # [Core] CPU 기반 스미스-워터맨 알고리즘 메인 로직
+│   ├── sw_gpu.cu             # [Core] CUDA 기반 GPU 가속 스미스-워터맨 메인 로직
+│   └── README.md             # 알고리즘 빌드 및 CLI 인수 실행 가이드
 │
-└── README.md                 # 프로젝트 최상위 개요 문서 (Current File)
-
+└── README.md                 # 프로젝트 최상위 개요 (본 문서)
 ```
 
 ## 🛠️ 4. Quick Start
@@ -49,7 +49,6 @@ sw_gpu_accelerator/
 cd 0_preprocessing
 g++ -std=c++17 preprocessor.cpp -o preprocessor
 ./preprocessor
-
 ```
 
 _실행 완료 시 `output_sequence` 폴더에 `[파일명]_seq1.txt`, `[파일명]_seq2.txt` 등의 파일이 자동 생성됩니다._
