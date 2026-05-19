@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "common.h"
 #include "sequence_codec.h"
 
 #include <iostream>
@@ -54,9 +54,15 @@ void smith_waterman_cpu(vector<string> sequences) {
     for (int i = 1; i <= len1; i++) {
         for (int j = 1; j <= len2; j++) {
 
-            int match_mis_score = (seq1_int[i - 1] == seq2_int[j - 1])
-                                      ? MATCH_SCORE
-                                      : MISMATCH_SCORE;
+            int idx1 = seq1_int[i - 1];
+            int idx2 = seq2_int[j - 1];
+
+            // 분기문 없이 배열 직접 참조, O(1)
+            // 'X'(알 수 없는 문자)나 20 이상의 잘못된 값이 들어오면 -4점 부여
+
+            int match_mis_score =
+                (idx1 < 20 && idx2 < 20) ? BLOSUM62[idx1][idx2] : -4;
+
             int diag_score =
                 score_table[get_idx(i - 1, j - 1)] + match_mis_score;
             int up_score = score_table[get_idx(i - 1, j)] + GAP_PENALTY;
