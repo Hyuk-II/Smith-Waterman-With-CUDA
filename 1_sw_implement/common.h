@@ -117,7 +117,6 @@ void run_traceback(const SWResult &result, const string &seq1,
 
     string align1 = "";
     string align2 = "";
-    string match_line = "";
 
     int curr_i = result.max_i;
     int curr_j = result.max_j;
@@ -141,41 +140,32 @@ void run_traceback(const SWResult &result, const string &seq1,
             align1 += seq1[curr_i - 1];
             align2 += seq2[curr_j - 1];
 
-            if (seq1_int[curr_i - 1] == seq2_int[curr_j - 1]) {
-                match_line += "|";
-            } else {
-                match_line += " ";
-            }
             curr_i--;
             curr_j--;
         }
-        // 2. 위 (Insert)
+        // 위 (Insert)
         else if (current_score ==
                  result.score_table[get_idx(curr_i - 1, curr_j)] +
                      GAP_PENALTY) {
             align1 += seq1[curr_i - 1];
             align2 += '-';
-            match_line += " ";
             curr_i--;
         }
-        // 3. 왼쪽 (Delete)
+        // 왼쪽 (Delete)
         else if (current_score ==
                  result.score_table[get_idx(curr_i, curr_j - 1)] +
                      GAP_PENALTY) {
             align1 += '-';
             align2 += seq2[curr_j - 1];
-            match_line += " ";
             curr_j--;
         }
     }
 
     reverse(align1.begin(), align1.end());
     reverse(align2.begin(), align2.end());
-    reverse(match_line.begin(), match_line.end());
 
     cout << "\n[최적 로컬 정렬 결과]" << endl;
     cout << "Seq 1: " << align1 << endl;
-    cout << "Match: " << match_line << endl;
     cout << "Seq 2: " << align2 << endl;
-    cout << "정렬 길이: " << align1.length() << " AA\n" << endl;
+    cout << "정렬 길이: " << align2.length() << " AA\n" << endl;
 }
