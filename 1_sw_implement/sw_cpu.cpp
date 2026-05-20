@@ -10,8 +10,7 @@
 using namespace std;
 using namespace std::chrono;
 
-SWResult smith_waterman_cpu(const vector<int> &seq1_int,
-                            const vector<int> &seq2_int);
+SWResult smith_waterman_cpu(const vector<int> &, const vector<int> &);
 
 int main(int argc, char *argv[]) {
     // 명령줄 인수 개수 검증

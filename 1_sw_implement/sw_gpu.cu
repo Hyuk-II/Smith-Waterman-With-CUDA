@@ -9,15 +9,14 @@
 using namespace std;
 using namespace std::chrono;
 
-// GPU 커널용 상수 메모리 선언 (전역 스코어 매트릭스)
+// GPU 커널용 상수 메모리 선언
 __constant__ int d_BLOSUM62[20][20];
 
 // GPU Wavefront 커널, 대각선 병렬 계산
-__global__ void sw_kernel_wavefront(int* score_table, const int* seq1, const int* seq2, 
-                                    int len1, int len2, int cols, int d);
+__global__ void sw_kernel_wavefront(int*, const int*, const int*, int, int, int, int);
 
 // GPU 스미스-워터맨 파이프라인
-SWResult smith_waterman_gpu(const vector<int>& seq1_int, const vector<int>& seq2_int);
+SWResult smith_waterman_gpu(const vector<int>&, const vector<int>&);
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
@@ -57,18 +56,18 @@ int main(int argc, char *argv[]) {
 
 __global__ void sw_kernel_wavefront(int* score_table, const int* seq1, const int* seq2, 
                                     int len1, int len2, int cols, int d) {
-    // 1. 현재 스레드의 글로벌 인덱스
+    // 현재 스레드의 글로벌 인덱스
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // 2. 대각선 d에 대한 시작 좌표(가장 아래쪽, 가장 왼쪽) 계산
+    // 대각선 d에 대한 시작 좌표 계산
     int start_i = min(d, len1);
     int start_j = max(1, d - len1 + 1);
 
-    // 3. 현재 스레드가 담당할 실제 테이블 좌표 계산
+    // 현재 스레드가 담당할 실제 테이블 좌표 계산
     int i = start_i - tid;
     int j = start_j + tid;
 
-    // 4. 테이블 유효 범위 내의 스레드만 연산 수행
+    // 테이블 유효 범위 내의 스레드만 연산 수행
     if (i >= 1 && j >= 1 && i <= len1 && j <= len2) {
         int idx1 = seq1[i - 1];
         int idx2 = seq2[j - 1];
@@ -81,7 +80,7 @@ __global__ void sw_kernel_wavefront(int* score_table, const int* seq1, const int
         int up_score   = score_table[(i - 1) * cols + j] - 2;
         int left_score = score_table[i * cols + (j - 1)] - 2;
 
-        // CUDA 내장 함수를 사용한 최대값 도출 (Clipping to 0)
+        // CUDA 내장 함수로 사용한 최대값 도출 (Clipping to 0)
         int current_score = 0;
         current_score = max(current_score, diag_score);
         current_score = max(current_score, up_score);
@@ -111,7 +110,7 @@ SWResult smith_waterman_gpu(const vector<int>& seq1_int, const vector<int>& seq2
     // H2D 복사 및 커널 실행 타이머 시작
     auto start_gpu = high_resolution_clock::now();
 
-    // 데이터 Host -> Device 복사 (H2D)
+    // 데이터 Host -> Device 복사
     cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(int), cudaMemcpyHostToDevice);
@@ -142,7 +141,7 @@ SWResult smith_waterman_gpu(const vector<int>& seq1_int, const vector<int>& seq2
     // GPU 작업 완료 대기
     cudaDeviceSynchronize();
 
-    // 데이터 Device -> Host 복사 (D2H)
+    // 데이터 Device -> Host 복사
     cudaMemcpy(h_score_table.data(), d_score_table, table_size * sizeof(int), cudaMemcpyDeviceToHost);
 
     // Device 메모리 해제
