@@ -1,36 +1,48 @@
 #pragma once
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
 
+// smith waterman 연산의 결과
+struct SWResult {
+    std::vector<int> score_table; // 2개의 문자열에 대한 점수 테이블
+    int max_score;                // 가장 높은 점수
+    int max_i;                    // 가장 높은 점수 좌표
+    int max_j;                    // 가장 높은 점수 좌표
+};
+
 const int GAP_PENALTY = -2;
 
 // SequenceCodec의 "ARNDCQEGHILKMFPSTWYV" 순서에 매핑된 BLOSUM62 행렬
 const int BLOSUM62[20][20] = {
-//   A   R   N   D   C   Q   E   G   H   I   L   K   M   F   P   S   T   W   Y   V
-  {  4, -1, -2, -2,  0, -1, -1,  0, -2, -1, -1, -1, -1, -2, -1,  1,  0, -3, -2,  0}, // A (0)
-  { -1,  5,  0, -2, -3,  1,  0, -2,  0, -3, -2,  2, -1, -3, -2, -1, -1, -3, -2, -3}, // R (1)
-  { -2,  0,  6,  1, -3,  0,  0,  0,  1, -3, -3,  0, -2, -3, -2,  1,  0, -4, -2, -3}, // N (2)
-  { -2, -2,  1,  6, -3,  0,  2, -1, -1, -3, -4, -1, -3, -3, -1,  0, -1, -4, -3, -3}, // D (3)
-  {  0, -3, -3, -3,  9, -3, -4, -3, -3, -1, -1, -3, -1, -2, -3, -1, -1, -2, -2, -1}, // C (4)
-  { -1,  1,  0,  0, -3,  5,  2, -2,  0, -3, -2,  1,  0, -3, -1,  0, -1, -2, -1, -2}, // Q (5)
-  { -1,  0,  0,  2, -4,  2,  5, -2,  0, -3, -3,  1, -2, -3, -1,  0, -1, -3, -2, -2}, // E (6)
-  {  0, -2,  0, -1, -3, -2, -2,  6, -2, -4, -4, -2, -3, -3, -2,  0, -2, -2, -3, -3}, // G (7)
-  { -2,  0,  1, -1, -3,  0,  0, -2,  8, -3, -3, -1, -2, -1, -2, -1, -2, -2,  2, -3}, // H (8)
-  { -1, -3, -3, -3, -1, -3, -3, -4, -3,  4,  2, -3,  1,  0, -3, -2, -1, -3, -1,  3}, // I (9)
-  { -1, -2, -3, -4, -1, -2, -3, -4, -3,  2,  4, -2,  2,  0, -3, -2, -1, -2, -1,  1}, // L (10)
-  { -1,  2,  0, -1, -3,  1,  1, -2, -1, -3, -2,  5, -1, -3, -1,  0, -1, -3, -2, -2}, // K (11)
-  { -1, -1, -2, -3, -1,  0, -2, -3, -2,  1,  2, -1,  5,  0, -2, -1, -1, -1, -1,  1}, // M (12)
-  { -2, -3, -3, -3, -2, -3, -3, -3, -1,  0,  0, -3,  0,  6, -4, -2, -2,  1,  3, -1}, // F (13)
-  { -1, -2, -2, -1, -3, -1, -1, -2, -2, -3, -3, -1, -2, -4,  7, -1, -1, -4, -3, -2}, // P (14)
-  {  1, -1,  1,  0, -1,  0,  0,  0, -1, -2, -2,  0, -1, -2, -1,  4,  1, -3, -2, -2}, // S (15)
-  {  0, -1,  0, -1, -1, -1, -1, -2, -2, -1, -1, -1, -1, -2, -1,  1,  5, -2, -2,  0}, // T (16)
-  { -3, -3, -4, -4, -2, -2, -3, -2, -2, -3, -2, -3, -1,  1, -4, -3, -2, 11,  2, -3}, // W (17)
-  { -2, -2, -2, -3, -2, -1, -2, -3,  2, -1, -1, -2, -1,  3, -3, -2, -2,  2,  7, -1}, // Y (18)
-  {  0, -3, -3, -3, -1, -2, -2, -3, -3,  3,  1, -2,  1, -1, -2, -2,  0, -3, -1,  4}  // V (19)
-};
+    {4, -1, -2, -2, 0, -1, -1, 0, -2, -1, -1, -1, -1, -2, -1, 1, 0, -3, -2, 0},
+    {-1, 5, 0, -2, -3, 1, 0, -2, 0, -3, -2, 2, -1, -3, -2, -1, -1, -3, -2, -3},
+    {-2, 0, 6, 1, -3, 0, 0, 0, 1, -3, -3, 0, -2, -3, -2, 1, 0, -4, -2, -3},
+    {-2, -2, 1, 6, -3, 0, 2, -1, -1, -3, -4, -1, -3, -3, -1, 0, -1, -4, -3, -3},
+    {0,  -3, -3, -3, 9,  -3, -4, -3, -3, -1,
+     -1, -3, -1, -2, -3, -1, -1, -2, -2, -1},
+    {-1, 1, 0, 0, -3, 5, 2, -2, 0, -3, -2, 1, 0, -3, -1, 0, -1, -2, -1, -2},
+    {-1, 0, 0, 2, -4, 2, 5, -2, 0, -3, -3, 1, -2, -3, -1, 0, -1, -3, -2, -2},
+    {0,  -2, 0,  -1, -3, -2, -2, 6,  -2, -4,
+     -4, -2, -3, -3, -2, 0,  -2, -2, -3, -3},
+    {-2, 0, 1, -1, -3, 0, 0, -2, 8, -3, -3, -1, -2, -1, -2, -1, -2, -2, 2, -3},
+    {-1, -3, -3, -3, -1, -3, -3, -4, -3, 4, 2, -3, 1, 0, -3, -2, -1, -3, -1, 3},
+    {-1, -2, -3, -4, -1, -2, -3, -4, -3, 2, 4, -2, 2, 0, -3, -2, -1, -2, -1, 1},
+    {-1, 2, 0, -1, -3, 1, 1, -2, -1, -3, -2, 5, -1, -3, -1, 0, -1, -3, -2, -2},
+    {-1, -1, -2, -3, -1, 0, -2, -3, -2, 1, 2, -1, 5, 0, -2, -1, -1, -1, -1, 1},
+    {-2, -3, -3, -3, -2, -3, -3, -3, -1, 0, 0, -3, 0, 6, -4, -2, -2, 1, 3, -1},
+    {-1, -2, -2, -1, -3, -1, -1, -2, -2, -3,
+     -3, -1, -2, -4, 7,  -1, -1, -4, -3, -2},
+    {1, -1, 1, 0, -1, 0, 0, 0, -1, -2, -2, 0, -1, -2, -1, 4, 1, -3, -2, -2},
+    {0, -1, 0, -1, -1, -1, -1, -2, -2, -1, -1, -1, -1, -2, -1, 1, 5, -2, -2, 0},
+    {-3, -3, -4, -4, -2, -2, -3, -2, -2, -3,
+     -2, -3, -1, 1,  -4, -3, -2, 11, 2,  -3},
+    {-2, -2, -2, -3, -2, -1, -2, -3, 2, -1,
+     -1, -2, -1, 3,  -3, -2, -2, 2,  7, -1},
+    {0, -3, -3, -3, -1, -2, -2, -3, -3, 3, 1, -2, 1, -1, -2, -2, 0, -3, -1, 4}};
 
 vector<string> get_sequences(char *argv[]) {
     vector<string> sequences;
@@ -94,36 +106,38 @@ vector<string> get_sequences(char *argv[]) {
 }
 
 // 2개의 문자열의 score_table에서, 가장 유사한 문자열을 추적하여 출력하는 함수
-void run_traceback(const vector<int> &score_table, const string &seq1,
+void run_traceback(const SWResult &result, const string &seq1,
                    const string &seq2, const vector<int> &seq1_int,
-                   const vector<int> &seq2_int, int cols, int max_i,
-                   int max_j) {
+                   const vector<int> &seq2_int) {
     cout << "\n=== 트레이스백 (Traceback) 시작 ===" << endl;
 
-    // DP 테이블 1차원 인덱싱 람다 (트레이스백 전용)
+    // DP 테이블 1차원 인덱싱 람다
+    int cols = seq2_int.size() + 1;
     auto get_idx = [&](int r, int c) { return r * cols + c; };
 
     string align1 = "";
     string align2 = "";
     string match_line = "";
 
-    int curr_i = max_i;
-    int curr_j = max_j;
+    int curr_i = result.max_i;
+    int curr_j = result.max_j;
 
     // 경로 추적, 현재 최댓값인 점수가, 대각선, 위, 왼쪽, 어디에서 온것인지
     // 확인하고 해당하는 문자로 문자열 구성
     while (curr_i > 0 && curr_j > 0 &&
-           score_table[get_idx(curr_i, curr_j)] > 0) {
+           result.score_table[get_idx(curr_i, curr_j)] > 0) {
 
-        int current_score = score_table[get_idx(curr_i, curr_j)];
+        int current_score = result.score_table[get_idx(curr_i, curr_j)];
         int idx1 = seq1_int[curr_i - 1];
         int idx2 = seq2_int[curr_j - 1];
 
-        int match_mis_score = (idx1 < 20 && idx2 < 20) ? BLOSUM62[idx1][idx2] : -4;
+        int match_mis_score =
+            (idx1 < 20 && idx2 < 20) ? BLOSUM62[idx1][idx2] : -4;
 
         // 대각선 (Match/Mismatch)
         if (current_score ==
-            score_table[get_idx(curr_i - 1, curr_j - 1)] + match_mis_score) {
+            result.score_table[get_idx(curr_i - 1, curr_j - 1)] +
+                match_mis_score) {
             align1 += seq1[curr_i - 1];
             align2 += seq2[curr_j - 1];
 
@@ -137,7 +151,8 @@ void run_traceback(const vector<int> &score_table, const string &seq1,
         }
         // 2. 위 (Insert)
         else if (current_score ==
-                 score_table[get_idx(curr_i - 1, curr_j)] + GAP_PENALTY) {
+                 result.score_table[get_idx(curr_i - 1, curr_j)] +
+                     GAP_PENALTY) {
             align1 += seq1[curr_i - 1];
             align2 += '-';
             match_line += " ";
@@ -145,7 +160,8 @@ void run_traceback(const vector<int> &score_table, const string &seq1,
         }
         // 3. 왼쪽 (Delete)
         else if (current_score ==
-                 score_table[get_idx(curr_i, curr_j - 1)] + GAP_PENALTY) {
+                 result.score_table[get_idx(curr_i, curr_j - 1)] +
+                     GAP_PENALTY) {
             align1 += '-';
             align2 += seq2[curr_j - 1];
             match_line += " ";
