@@ -1,13 +1,17 @@
-#include "functions.h"
+#include "common.h"
 #include "sequence_codec.h"
 
+#include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
 
 using namespace std;
+using namespace std::chrono;
 
-void smith_waterman_cpu(vector<string> sequences);
+SWResult smith_waterman_cpu(const vector<int> &seq1_int,
+                            const vector<int> &seq2_int);
 
 int main(int argc, char *argv[]) {
     // 명령줄 인수 개수 검증
@@ -23,17 +27,36 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // 추출된 문자열로 score table 구성
-    smith_waterman_cpu(sequences);
+    SequenceCodec codec;
+    vector<int> seq1_int = codec.encode(sequences[0]);
+    vector<int> seq2_int = codec.encode(sequences[1]);
+
+    // 추출된 문자열로 cpu기반 smith waterman 알고리즘 수행
+    auto start_dp = high_resolution_clock::now();
+    // 구조체로 테이블과 최대 좌표 리턴
+    SWResult result = smith_waterman_cpu(seq1_int, seq2_int);
+    auto end_dp = high_resolution_clock::now();
+
+    // 최장 유사 문자열 출력
+    auto start_tb = high_resolution_clock::now();
+    run_traceback(result, sequences[0], sequences[1], seq1_int, seq2_int);
+    auto end_tb = high_resolution_clock::now();
+
+    duration<double, std::milli> dp_ms = end_dp - start_dp;
+    duration<double, std::milli> tb_ms = end_tb - start_tb;
+
+    cout << "\n===  CPU 성능 측정 결과 ===" << endl;
+    cout << "- DP 테이블 생성 : " << dp_ms.count() << " ms" << endl;
+    cout << "- 트레이스백 연산: " << tb_ms.count() << " ms" << endl;
+    cout << "- Total 소요 시간: " << (dp_ms + tb_ms).count() << " ms" << endl;
+    cout << "============================\n" << endl;
 
     return 0;
 }
 
 // smith waterman CPU 연산
-void smith_waterman_cpu(vector<string> sequences) {
-    SequenceCodec codec;
-    vector<int> seq1_int = codec.encode(sequences[0]);
-    vector<int> seq2_int = codec.encode(sequences[1]);
+SWResult smith_waterman_cpu(const vector<int> &seq1_int,
+                            const vector<int> &seq2_int) {
 
     int len1 = seq1_int.size();
     int len2 = seq2_int.size();
@@ -54,9 +77,15 @@ void smith_waterman_cpu(vector<string> sequences) {
     for (int i = 1; i <= len1; i++) {
         for (int j = 1; j <= len2; j++) {
 
-            int match_mis_score = (seq1_int[i - 1] == seq2_int[j - 1])
-                                      ? MATCH_SCORE
-                                      : MISMATCH_SCORE;
+            int idx1 = seq1_int[i - 1];
+            int idx2 = seq2_int[j - 1];
+
+            // 분기문 없이 배열 직접 참조, O(1)
+            // 'X'(알 수 없는 문자)나 20 이상의 잘못된 값이 들어오면 -4점 부여
+
+            int match_mis_score =
+                (idx1 < 20 && idx2 < 20) ? BLOSUM62[idx1][idx2] : -4;
+
             int diag_score =
                 score_table[get_idx(i - 1, j - 1)] + match_mis_score;
             int up_score = score_table[get_idx(i - 1, j)] + GAP_PENALTY;
@@ -73,11 +102,5 @@ void smith_waterman_cpu(vector<string> sequences) {
         }
     }
 
-    cout << "=== 연산 완료 ===" << endl;
-    cout << "최대 정렬 점수 : " << max_score << endl;
-    cout << "최대 점수 좌표 : (" << max_i << ", " << max_j << ")" << endl;
-
-    // 연산이 끝나면 시작좌표(max_i, max_j)부터 역추적 함수 호출
-    run_traceback(score_table, sequences[0], sequences[1], seq1_int, seq2_int,
-                  cols, max_i, max_j);
+    return {score_table, max_score, max_i, max_j};
 }

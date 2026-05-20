@@ -31,7 +31,7 @@ sw_gpu_accelerator/
 │
 ├── 1_sw_implement/
 │   ├── sequence_codec.h      # 서열 문자열 <-> 정수(uint8_t) 양방향 매핑 모듈
-│   ├── functions.h           # 공통 유틸리티 함수 모음
+│   ├── common.h              # 공통 유틸리티 모음
 │   ├── sw_cpu.cpp            # [Core] CPU 기반 스미스-워터맨 알고리즘 메인 로직
 │   ├── sw_gpu.cu             # [Core] CUDA 기반 GPU 가속 스미스-워터맨 메인 로직
 │   └── README.md             # 알고리즘 빌드 및 CLI 인수 실행 가이드

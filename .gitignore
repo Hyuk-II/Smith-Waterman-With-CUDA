@@ -2,10 +2,9 @@
 0_preprocessing/input_fasta/*
 0_preprocessing/output_sequence/*
 
-# (선택) 폴더 구조 자체는 Git에 남기고 싶다면 아래 주석을 해제하고 
-# 해당 폴더 안에 빈 .gitkeep 파일을 만들어두면 됩니다.
-# !0_preprocessing/input_fasta/.gitkeep
-# !0_preprocessing/output_sequence/.gitkeep
+!0_preprocessing/input_fasta/example.fasta
+!0_preprocessing/output_sequence/example_seq1.txt
+!0_preprocessing/output_sequence/example_seq2.txt
 
 # 2. C++ 컴파일된 바이너리 (실행 파일) 무시
 0_preprocessing/preprocessor
