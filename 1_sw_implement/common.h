@@ -14,6 +14,11 @@ struct SWResult {
     int max_j;                    // 가장 높은 점수 좌표
 };
 
+struct TracebackResult {
+    std::string align1;
+    std::string align2;
+};
+
 const int GAP_PENALTY = -2;
 
 // SequenceCodec의 "ARNDCQEGHILKMFPSTWYV" 순서에 매핑된 BLOSUM62 행렬
@@ -106,9 +111,9 @@ vector<string> get_sequences(char *argv[]) {
 }
 
 // 2개의 문자열의 score_table에서, 가장 유사한 문자열을 추적하여 출력하는 함수
-void run_traceback(const SWResult &result, const string &seq1,
-                   const string &seq2, const vector<int> &seq1_int,
-                   const vector<int> &seq2_int) {
+TracebackResult run_traceback(const SWResult &result, const string &seq1,
+                              const string &seq2, const vector<int> &seq1_int,
+                              const vector<int> &seq2_int) {
     cout << "\n=== 트레이스백 (Traceback) 시작 ===" << endl;
 
     // DP 테이블 1차원 인덱싱 람다
@@ -117,7 +122,6 @@ void run_traceback(const SWResult &result, const string &seq1,
 
     string align1 = "";
     string align2 = "";
-    string match_line = "";
 
     int curr_i = result.max_i;
     int curr_j = result.max_j;
@@ -141,41 +145,29 @@ void run_traceback(const SWResult &result, const string &seq1,
             align1 += seq1[curr_i - 1];
             align2 += seq2[curr_j - 1];
 
-            if (seq1_int[curr_i - 1] == seq2_int[curr_j - 1]) {
-                match_line += "|";
-            } else {
-                match_line += " ";
-            }
             curr_i--;
             curr_j--;
         }
-        // 2. 위 (Insert)
+        // 위 (Insert)
         else if (current_score ==
                  result.score_table[get_idx(curr_i - 1, curr_j)] +
                      GAP_PENALTY) {
             align1 += seq1[curr_i - 1];
             align2 += '-';
-            match_line += " ";
             curr_i--;
         }
-        // 3. 왼쪽 (Delete)
+        // 왼쪽 (Delete)
         else if (current_score ==
                  result.score_table[get_idx(curr_i, curr_j - 1)] +
                      GAP_PENALTY) {
             align1 += '-';
             align2 += seq2[curr_j - 1];
-            match_line += " ";
             curr_j--;
         }
     }
 
     reverse(align1.begin(), align1.end());
     reverse(align2.begin(), align2.end());
-    reverse(match_line.begin(), match_line.end());
 
-    cout << "\n[최적 로컬 정렬 결과]" << endl;
-    cout << "Seq 1: " << align1 << endl;
-    cout << "Match: " << match_line << endl;
-    cout << "Seq 2: " << align2 << endl;
-    cout << "정렬 길이: " << align1.length() << " AA\n" << endl;
+    return {align1, align2};
 }

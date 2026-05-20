@@ -39,8 +39,14 @@ int main(int argc, char *argv[]) {
 
     // 최장 유사 문자열 출력
     auto start_tb = high_resolution_clock::now();
-    run_traceback(result, sequences[0], sequences[1], seq1_int, seq2_int);
+    TracebackResult tb_result =
+        run_traceback(result, sequences[0], sequences[1], seq1_int, seq2_int);
     auto end_tb = high_resolution_clock::now();
+
+    cout << "\n[최적 로컬 정렬 결과]" << endl;
+    cout << "Seq 1: " << tb_result.align1 << endl;
+    cout << "Seq 2: " << tb_result.align2 << endl;
+    cout << "정렬 길이: " << tb_result.align2.length() << " AA\n" << endl;
 
     duration<double, std::milli> dp_ms = end_dp - start_dp;
     duration<double, std::milli> tb_ms = end_tb - start_tb;
@@ -70,7 +76,7 @@ SWResult smith_waterman_cpu(const vector<int> &seq1_int,
     int max_i = 0;
     int max_j = 0;
 
-    cout << "\n=== DP 테이블 연산 시작 ===" << endl;
+    cout << "\n=== 테이블 연산 시작 ===" << endl;
     cout << "테이블 크기: " << rows << " x " << cols << " ("
          << (rows * cols * 4) / 1024 << " KB)" << endl;
 
