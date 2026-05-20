@@ -38,24 +38,16 @@ int main(int argc, char *argv[]) {
     auto end_dp = high_resolution_clock::now();
 
     // 최장 유사 문자열 출력
-    auto start_tb = high_resolution_clock::now();
-    TracebackResult tb_result =
-        run_traceback(result, sequences[0], sequences[1], seq1_int, seq2_int);
-    auto end_tb = high_resolution_clock::now();
-
-    cout << "\n[최적 로컬 정렬 결과]" << endl;
-    cout << "Seq 1: " << tb_result.align1 << endl;
-    cout << "Seq 2: " << tb_result.align2 << endl;
-    cout << "정렬 길이: " << tb_result.align2.length() << " AA\n" << endl;
+    run_traceback(result, sequences[0], sequences[1], seq1_int, seq2_int);
 
     duration<double, std::milli> dp_ms = end_dp - start_dp;
-    duration<double, std::milli> tb_ms = end_tb - start_tb;
 
-    cout << "\n===  CPU 성능 측정 결과 ===" << endl;
-    cout << "- DP 테이블 생성 : " << dp_ms.count() << " ms" << endl;
-    cout << "- 트레이스백 연산: " << tb_ms.count() << " ms" << endl;
-    cout << "- Total 소요 시간: " << (dp_ms + tb_ms).count() << " ms" << endl;
-    cout << "============================\n" << endl;
+    cout << "\n========================================" << endl;
+    cout << " [ CPU 벤치마크 결과 요약 ]" << endl;
+    cout << "----------------------------------------" << endl;
+    cout << " 최대 정렬 점수 : " << result.max_score << endl;
+    cout << " 점수 테이블 연산 : " << dp_ms.count() << " ms" << endl;
+    cout << "========================================\n" << endl;
 
     return 0;
 }

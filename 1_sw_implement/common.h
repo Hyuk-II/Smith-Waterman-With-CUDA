@@ -14,11 +14,6 @@ struct SWResult {
     int max_j;                    // 가장 높은 점수 좌표
 };
 
-struct TracebackResult {
-    std::string align1;
-    std::string align2;
-};
-
 const int GAP_PENALTY = -2;
 
 // SequenceCodec의 "ARNDCQEGHILKMFPSTWYV" 순서에 매핑된 BLOSUM62 행렬
@@ -111,9 +106,9 @@ vector<string> get_sequences(char *argv[]) {
 }
 
 // 2개의 문자열의 score_table에서, 가장 유사한 문자열을 추적하여 출력하는 함수
-TracebackResult run_traceback(const SWResult &result, const string &seq1,
-                              const string &seq2, const vector<int> &seq1_int,
-                              const vector<int> &seq2_int) {
+void run_traceback(const SWResult &result, const string &seq1,
+                   const string &seq2, const vector<int> &seq1_int,
+                   const vector<int> &seq2_int) {
     cout << "\n=== 트레이스백 (Traceback) 시작 ===" << endl;
 
     // DP 테이블 1차원 인덱싱 람다
@@ -169,5 +164,8 @@ TracebackResult run_traceback(const SWResult &result, const string &seq1,
     reverse(align1.begin(), align1.end());
     reverse(align2.begin(), align2.end());
 
-    return {align1, align2};
+    cout << "\n[최적 로컬 정렬 결과]" << endl;
+    cout << "Seq 1: " << align1 << endl;
+    cout << "Seq 2: " << align2 << endl;
+    cout << "정렬 길이: " << align2.length() << " AA\n" << endl;
 }
