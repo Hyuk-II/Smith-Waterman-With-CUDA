@@ -1,11 +1,13 @@
 #include "common.h"
 #include "sequence_codec.h"
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
 
 using namespace std;
+using namespace std::chrono;
 
 void smith_waterman_cpu(vector<string> sequences);
 
@@ -23,7 +25,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // 추출된 문자열로 score table 구성
+    // 추출된 문자열로 cpu기반 smith waterman 알고리즘 수행
     smith_waterman_cpu(sequences);
 
     return 0;
