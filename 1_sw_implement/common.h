@@ -107,8 +107,8 @@ vector<string> get_sequences(char *argv[]) {
 
 // 2개의 문자열의 score_table에서, 가장 유사한 문자열을 추적하여 출력하는 함수
 void run_traceback(const SWResult &result, const string &seq1,
-                   const string &seq2, const vector<int> &seq1_int,
-                   const vector<int> &seq2_int) {
+                   const string &seq2, const vector<uint8_t> &seq1_int,
+                   const vector<uint8_t> &seq2_int) {
     cout << "\n=== 트레이스백 (Traceback) 시작 ===" << endl;
 
     // DP 테이블 1차원 인덱싱 람다

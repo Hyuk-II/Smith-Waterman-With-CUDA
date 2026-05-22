@@ -10,7 +10,7 @@
 using namespace std;
 using namespace std::chrono;
 
-SWResult smith_waterman_cpu(const vector<int> &, const vector<int> &);
+SWResult smith_waterman_cpu(const vector<uint8_t> &, const vector<uint8_t> &);
 
 int main(int argc, char *argv[]) {
     // 명령줄 인수 개수 검증
@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
     }
 
     SequenceCodec codec;
-    vector<int> seq1_int = codec.encode(sequences[0]);
-    vector<int> seq2_int = codec.encode(sequences[1]);
+    vector<uint8_t> seq1_int = codec.encode(sequences[0]);
+    vector<uint8_t> seq2_int = codec.encode(sequences[1]);
 
     // 추출된 문자열로 cpu기반 smith waterman 알고리즘 수행
     auto start_dp = high_resolution_clock::now();
@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
 }
 
 // smith waterman CPU 연산
-SWResult smith_waterman_cpu(const vector<int> &seq1_int,
-                            const vector<int> &seq2_int) {
+SWResult smith_waterman_cpu(const vector<uint8_t> &seq1_int,
+                            const vector<uint8_t> &seq2_int) {
 
     int len1 = seq1_int.size();
     int len2 = seq2_int.size();

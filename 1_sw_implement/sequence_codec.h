@@ -8,8 +8,8 @@ using namespace std;
 
 class SequenceCodec {
   private:
-    int ascii_2_index[128]; // 아스키코드 매핑 테이블
-    char index_2_ascii[22]; // index 매핑 테이블
+    uint8_t ascii_2_index[128]; // 아스키코드 매핑 테이블
+    char index_2_ascii[22];     // index 매핑 테이블
 
   public:
     SequenceCodec() {
@@ -36,9 +36,9 @@ class SequenceCodec {
         ascii_2_index['-'] = 21;
     }
 
-    vector<int> encode(string &sequence) {
+    vector<uint8_t> encode(string &sequence) {
         int len = sequence.length();
-        vector<int> encode_seq(len);
+        vector<uint8_t> encode_seq(len);
 
         for (int i = 0; i < len; i++) {
             encode_seq[i] = ascii_2_index[sequence[i]]; // 문자 배열 정수로 매핑
@@ -46,7 +46,7 @@ class SequenceCodec {
         return encode_seq;
     }
 
-    string decode(vector<int> encode_seq) {
+    string decode(vector<uint8_t> encode_seq) {
         int len = encode_seq.size();
         string decode_seq = "";
 
