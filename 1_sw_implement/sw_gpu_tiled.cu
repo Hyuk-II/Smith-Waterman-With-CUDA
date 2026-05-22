@@ -16,72 +16,15 @@ using namespace std::chrono;
 __constant__ int d_BLOSUM62[20][20];
 
 // GPU 공유 메모리 타일링 커널
-__global__ void sw_kernel_tiled(int*, const int*, const int*, int, int, int, int, int);
+__global__ void sw_kernel_tiled(int*, const uint8_t*, const uint8_t*, int, int, int, int, int);
 
 // GPU 스미스-워터맨 파이프라인
-SWResult smith_waterman_gpu(const vector<int>& seq1_int, const vector<int>& seq2_int) {
-    int len1 = seq1_int.size();
-    int len2 = seq2_int.size();
-    int rows = len1 + 1;
-    int cols = len2 + 1;
-    int table_size = rows * cols;
-
-    vector<int> h_score_table(table_size, 0);
-    int *d_score_table, *d_seq1, *d_seq2;
-    cudaMalloc(&d_score_table, table_size * sizeof(int));
-    cudaMalloc(&d_seq1, len1 * sizeof(int));
-    cudaMalloc(&d_seq2, len2 * sizeof(int));
-
-    auto start_gpu = high_resolution_clock::now();
-
-    cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int));
-
-    // 블록 단위로 쪼갠 전체 그리드 크기 계산
-    int num_blocks_row = (len1 + TILE_SIZE - 1) / TILE_SIZE;
-    int num_blocks_col = (len2 + TILE_SIZE - 1) / TILE_SIZE;
-    int num_block_diagonals = num_blocks_row + num_blocks_col - 1;
-
-    // Macro Wavefront 커널 실행, 타일 대각선 개수만큼만 루프
-    for (int bd = 0; bd < num_block_diagonals; bd++) {
-        int num_blocks_in_diag = min(bd + 1, min(num_blocks_row, num_blocks_col));
-        if (bd >= num_blocks_row) {
-            num_blocks_in_diag = num_blocks_row + num_blocks_col - bd - 1;
-        }
-
-        // 스레드 개수는 타일 크기와 동일하게 매핑
-        sw_kernel_tiled<<<num_blocks_in_diag, TILE_SIZE>>>(d_score_table, d_seq1, d_seq2, len1, len2, cols, bd, num_blocks_row);
-    }
-    
-    cudaDeviceSynchronize();
-    cudaMemcpy(h_score_table.data(), d_score_table, table_size * sizeof(int), cudaMemcpyDeviceToHost);
-    auto end_gpu = high_resolution_clock::now();
-
-    cudaFree(d_score_table);
-    cudaFree(d_seq1);
-    cudaFree(d_seq2);
-
-    int max_score = 0;
-    int max_i = 0;
-    int max_j = 0;
-    for (int i = 1; i <= len1; i++) {
-        for (int j = 1; j <= len2; j++) {
-            if (h_score_table[i * cols + j] > max_score) {
-                max_score = h_score_table[i * cols + j];
-                max_i = i;
-                max_j = j;
-            }
-        }
-    }
-
-    return {h_score_table, max_score, max_i, max_j};
-}
+SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_t>& seq2_int);
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        cerr << "[사용법] ./sw_gpu_tiled <서열파일명1> <서열파일명2>" << endl;
+        cerr << "[사용법] ./sw_cpu <서열파일명1> <서열파일명2>" << endl;
+        cerr << "예시: ./sw_gpu_tiled example_seq1.txt example_seq2.txt" << endl;
         return 1;
     }
 
@@ -92,8 +35,8 @@ int main(int argc, char *argv[]) {
     if (sequences.size() == 0) return 1;
 
     SequenceCodec codec;
-    vector<int> seq1_int = codec.encode(sequences[0]);
-    vector<int> seq2_int = codec.encode(sequences[1]);
+    vector<uint8_t> seq1_int = codec.encode(sequences[0]);
+    vector<uint8_t> seq2_int = codec.encode(sequences[1]);
     
     auto start_dp = high_resolution_clock::now();
     SWResult result = smith_waterman_gpu(seq1_int, seq2_int);
@@ -114,7 +57,7 @@ int main(int argc, char *argv[]) {
 }
 
 // GPU 공유 메모리 타일링 커널
-__global__ void sw_kernel_tiled(int* score_table, const int* seq1, const int* seq2, 
+__global__ void sw_kernel_tiled(int* score_table, const uint8_t* seq1, const uint8_t* seq2, 
                                 int len1, int len2, int cols, 
                                 int block_diag_idx, int num_blocks_row) {
     
@@ -200,4 +143,66 @@ __global__ void sw_kernel_tiled(int* score_table, const int* seq1, const int* se
             }
         }
     }
+}
+
+SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_t>& seq2_int) {
+    int len1 = seq1_int.size();
+    int len2 = seq2_int.size();
+    int rows = len1 + 1;
+    int cols = len2 + 1;
+    int table_size = rows * cols;
+
+    vector<int> h_score_table(table_size, 0);
+    int *d_score_table;
+    uint8_t *d_seq1, *d_seq2;
+    cudaMalloc(&d_score_table, table_size * sizeof(int));
+    cudaMalloc(&d_seq1, len1 * sizeof(uint8_t));
+    cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
+
+    auto start_gpu = high_resolution_clock::now();
+
+    cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int));
+    
+
+    // 블록 단위로 쪼갠 전체 그리드 크기 계산
+    int num_blocks_row = (len1 + TILE_SIZE - 1) / TILE_SIZE;
+    int num_blocks_col = (len2 + TILE_SIZE - 1) / TILE_SIZE;
+    int num_block_diagonals = num_blocks_row + num_blocks_col - 1;
+
+    // Macro Wavefront 커널 실행, 타일 대각선 개수만큼만 루프
+    for (int bd = 0; bd < num_block_diagonals; bd++) {
+        int num_blocks_in_diag = min(bd + 1, min(num_blocks_row, num_blocks_col));
+        if (bd >= num_blocks_row) {
+            num_blocks_in_diag = num_blocks_row + num_blocks_col - bd - 1;
+        }
+
+        // 스레드 개수는 타일 크기와 동일하게 매핑
+        sw_kernel_tiled<<<num_blocks_in_diag, TILE_SIZE>>>(d_score_table, d_seq1, d_seq2, len1, len2, cols, bd, num_blocks_row);
+    }
+    
+    cudaDeviceSynchronize();
+    cudaMemcpy(h_score_table.data(), d_score_table, table_size * sizeof(int), cudaMemcpyDeviceToHost);
+    auto end_gpu = high_resolution_clock::now();
+
+    cudaFree(d_score_table);
+    cudaFree(d_seq1);
+    cudaFree(d_seq2);
+
+    int max_score = 0;
+    int max_i = 0;
+    int max_j = 0;
+    for (int i = 1; i <= len1; i++) {
+        for (int j = 1; j <= len2; j++) {
+            if (h_score_table[i * cols + j] > max_score) {
+                max_score = h_score_table[i * cols + j];
+                max_i = i;
+                max_j = j;
+            }
+        }
+    }
+
+    return {h_score_table, max_score, max_i, max_j};
 }

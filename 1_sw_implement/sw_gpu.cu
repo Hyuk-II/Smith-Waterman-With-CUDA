@@ -13,10 +13,10 @@ using namespace std::chrono;
 __constant__ int d_BLOSUM62[20][20];
 
 // GPU Wavefront 커널, 대각선 병렬 계산
-__global__ void sw_kernel_wavefront(int*, const int*, const int*, int, int, int, int);
+__global__ void sw_kernel_wavefront(int*, const uint8_t*, const uint8_t*, int, int, int, int);
 
 // GPU 스미스-워터맨 파이프라인
-SWResult smith_waterman_gpu(const vector<int>&, const vector<int>&);
+SWResult smith_waterman_gpu(const vector<uint8_t>&, const vector<uint8_t>&);
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
     if (sequences.size() == 0) return 1;
 
     SequenceCodec codec;
-    vector<int> seq1_int = codec.encode(sequences[0]);
-    vector<int> seq2_int = codec.encode(sequences[1]);
+    vector<uint8_t> seq1_int = codec.encode(sequences[0]);
+    vector<uint8_t> seq2_int = codec.encode(sequences[1]);
     
     // 추출된 문자열로 gpu기반 smith waterman 알고리즘 수행
     // 구조체로 테이블과 최대 좌표 리턴
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-__global__ void sw_kernel_wavefront(int* score_table, const int* seq1, const int* seq2, 
+__global__ void sw_kernel_wavefront(int* score_table, const uint8_t* seq1, const uint8_t* seq2, 
                                     int len1, int len2, int cols, int d) {
     // 현재 스레드의 글로벌 인덱스
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -91,7 +91,7 @@ __global__ void sw_kernel_wavefront(int* score_table, const int* seq1, const int
     }
 }
 
-SWResult smith_waterman_gpu(const vector<int>& seq1_int, const vector<int>& seq2_int) {
+SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_t>& seq2_int) {
     int len1 = seq1_int.size();
     int len2 = seq2_int.size();
     int rows = len1 + 1;
@@ -102,18 +102,19 @@ SWResult smith_waterman_gpu(const vector<int>& seq1_int, const vector<int>& seq2
     vector<int> h_score_table(table_size, 0);
 
     // Device 메모리 할당
-    int *d_score_table, *d_seq1, *d_seq2;
+    int *d_score_table;
+    uint8_t *d_seq1, *d_seq2;
     cudaMalloc(&d_score_table, table_size * sizeof(int));
-    cudaMalloc(&d_seq1, len1 * sizeof(int));
-    cudaMalloc(&d_seq2, len2 * sizeof(int));
+    cudaMalloc(&d_seq1, len1 * sizeof(uint8_t));
+    cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
 
     // H2D 복사 및 커널 실행 타이머 시작
     auto start_gpu = high_resolution_clock::now();
 
     // 데이터 Host -> Device 복사
     cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice);
     
     // BLOSUM62 상수 메모리 복사
     cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int));
