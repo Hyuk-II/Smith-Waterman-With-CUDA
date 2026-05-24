@@ -1,6 +1,7 @@
 #include "common.h"
 #include "sequence_codec.h"
 
+#include <cstdint>
 #include <algorithm>
 #include <chrono>
 #include <iostream>

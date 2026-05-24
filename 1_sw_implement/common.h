@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <cstdint>
 #include <string>
 #include <vector>
 using namespace std;

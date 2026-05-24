@@ -1,4 +1,4 @@
-#include "common.h"
+﻿#include "common.h"
 #include "sequence_codec.h"
 
 #include <iostream>
@@ -75,8 +75,8 @@ __global__ void sw_kernel_tiled(int* score_table, const uint8_t* seq1, const uin
     int tx = threadIdx.x; // 0 ~ 31
 
     // 공유 메모리 할당
-    __shared__ int seq1_s[TILE_SIZE];
-    __shared__ int seq2_s[TILE_SIZE];
+    __shared__ uint8_t seq1_s[TILE_SIZE];
+    __shared__ uint8_t seq2_s[TILE_SIZE];
     __shared__ int H_s[TILE_SIZE + 1][TILE_SIZE + 1];
 
     // 타일의 실제 글로벌 시작 좌표 (1-based index)

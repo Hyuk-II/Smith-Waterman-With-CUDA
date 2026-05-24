@@ -19,6 +19,16 @@
 
 프로세서의 연산 장치(ALU)는 Text보다 Numeric 처리에 최적화되어 있습니다. 서열을 1바이트 정수(`uint8_t`) 배열로 변환함으로써 메모리 정렬의 이점을 얻을 뿐만 아니라, 향후 대용량 서열 데이터를 GPU로 복사할 때 **PCIe 버스의 Bandwidth 오버헤드를 절약**할 수 있습니다.
 
+###  [검증] 하드웨어 프로파일링 분석: uint8_t vs int
+![alt text](image.png)
+uint8_t(1바이트)와 표준 int(4바이트)를 사용했을 때 실제 메모리 효율성 차이를 증명하기 위해 Nsight Compute 프로파일러를 활용하여 DRAM 읽기량(dram__bytes_read.sum)을 측정했습니다.
+
+Figure. 1차원 Grid 1x1 커널의 DRAM Read Bytes 비교
+
+분석 결과: 위 사진의 커널 프로파일링 결과를 비교하면, 동일한 서열 데이터에 대해 int 대조군 버전(오른쪽)은 약 4.6배 더 많은 데이터를 글로벌 메모리(DRAM)에서 읽어들입니다.
+
+해석: 이는 uint8_t가 int에 비해 4배 더 높은 데이터 밀도를 가지며, GPU L2/L1 캐시에 뭉텅이로 탑재(Cache Line Utilization)될 확률을 4배 높여 DRAM 대역폭 오버헤드를 근본적으로 줄였음을 증명합니다.
+
 ## Troubleshooting : GPU 병목 분석 및 공유 타일링 적용
 
 ### 개요 (Expectation vs. Reality)

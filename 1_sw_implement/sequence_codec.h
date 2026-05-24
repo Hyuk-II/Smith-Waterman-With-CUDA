@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <string>
@@ -46,7 +46,7 @@ class SequenceCodec {
         return encode_seq;
     }
 
-    string decode(vector<uint8_t> encode_seq) {
+    string decode(vector<int> encode_seq) {
         int len = encode_seq.size();
         string decode_seq = "";
 
