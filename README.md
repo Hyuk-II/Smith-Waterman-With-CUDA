@@ -87,7 +87,7 @@ g++ -std=c++17 -fexec-charset=cp949 sw_cpu.cpp -o sw_cpu.exe
 #### 🚀 [GPU 가속 커널 실행]
 
 > ⚠️ **Windows 환경 빌드 시 주의사항 (필독)**
-> 1. 반드시 **"x64 Native Tools Command Prompt"** 터미널을 사용하여 64비트 컴파일 환경을 구성해야 합니다. (일반 cmd나 x86 터미널 사용 시 `ACCESS_VIOLATION` 에러 발생)
+> 1. 반드시 **"x64 Native Tools Command Prompt"** 터미널을 사용하여 64비트 컴파일 환경을 구성해야 합니다. (일반 cmd나 x86 터미널 사용 시 `ACCESS_VIOLATION` 에러 발생, CUDA Toolkit은 공식적으로 32비트 환경을 지원하지 않습니다.)
 > 2. 경로에 한글이나 공백이 포함되어 있으면 CUDA 컴파일러 프론트엔드(`cudafe++`)가 비정상 종료될 수 있습니다. 프로젝트 폴더는 순수 영문 경로(예: `C:\CUDA_Projects\...`)에 위치해야 합니다.
 > 3. 소스코드 내부의 주석을 파싱하는 과정에서 인코딩 충돌이 발생하지 않도록, `1_sw_implement` 내의 모든 헤더(`.h`)와 코드(`.cu`) 파일은 **UTF-8 with BOM** 형식으로 저장하거나 영어로 작성할 것을 권장합니다.
 > 4. `nvcc`에 `-Xcompiler "/utf-8"` 옵션을 추가하면 사용자 코드는 정상 파싱되지만, NVIDIA 내부 헤더 파싱 중 충돌을 일으킬 수 있으므로 **기본 명령어만 사용하는 것을 권장**합니다.
