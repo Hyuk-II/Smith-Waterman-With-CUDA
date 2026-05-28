@@ -6,9 +6,22 @@
 !0_preprocessing/output_sequence/example_seq1.txt
 !0_preprocessing/output_sequence/example_seq2.txt
 
-# 2. C++ 컴파일된 바이너리 (실행 파일) 무시
+# 2. C++/CUDA 컴파일 산물 무시 (소스 디렉토리)
+#    사전 빌드본은 99_archive/prebuilt_*/ 에 별도 보관
 0_preprocessing/preprocessor
+0_preprocessing/preprocessor.exe
 1_sw_implement/sw_cpu
+1_sw_implement/sw_cpu.exe
+1_sw_implement/sw_gpu
+1_sw_implement/sw_gpu.exe
+1_sw_implement/sw_gpu_tiled
+1_sw_implement/sw_gpu_tiled.exe
+1_sw_implement/sw_gpu_tiled_int
+1_sw_implement/sw_gpu_tiled_int.exe
+1_sw_implement/*.lib
+1_sw_implement/*.exp
+1_sw_implement/*.obj
+1_sw_implement/*.pdb
 build/
 
 # 3. macOS 시스템 파일 무시

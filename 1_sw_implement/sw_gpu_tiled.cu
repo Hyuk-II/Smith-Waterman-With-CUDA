@@ -23,7 +23,7 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        cerr << "[사용법] ./sw_cpu <서열파일명1> <서열파일명2>" << endl;
+        cerr << "[사용법] ./sw_gpu_tiled <서열파일명1> <서열파일명2>" << endl;
         cerr << "예시: ./sw_gpu_tiled example_seq1.txt example_seq2.txt" << endl;
         return 1;
     }
