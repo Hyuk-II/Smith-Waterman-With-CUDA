@@ -25,6 +25,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    cudaFree(0);
+
     vector<string> sequences = get_sequences(argv);
     if (sequences.size() == 0) return 1;
 
@@ -107,8 +109,6 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     cudaMalloc(&d_score_table, table_size * sizeof(int));
     cudaMalloc(&d_seq1, len1 * sizeof(uint8_t));
     cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
-
-    // H2D 복사 및 커널 실행 타이머 시작
 
     // 데이터 Host -> Device 복사
     cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);

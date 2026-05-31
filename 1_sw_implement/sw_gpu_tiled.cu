@@ -159,8 +159,6 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     cudaMalloc(&d_seq1, len1 * sizeof(uint8_t));
     cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
 
-    auto start_gpu = high_resolution_clock::now();
-
     cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice);
     cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice);
@@ -185,7 +183,6 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     
     cudaDeviceSynchronize();
     cudaMemcpy(h_score_table.data(), d_score_table, table_size * sizeof(int), cudaMemcpyDeviceToHost);
-    auto end_gpu = high_resolution_clock::now();
 
     cudaFree(d_score_table);
     cudaFree(d_seq1);
