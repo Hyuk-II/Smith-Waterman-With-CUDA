@@ -48,12 +48,18 @@ const int BLOSUM62[20][20] = {
 vector<string> get_sequences(char *argv[]) {
     vector<string> sequences;
 
-    // 상대 경로 디렉토리 설정
+    // 기본 데이터 위치: 소스 트리에서 1_sw_implement를 CWD로 실행할 때의 fallback
+    // 절대 경로나 다른 상대 경로를 인자로 주면 그대로 사용
     const string BASE_DIR = "../0_preprocessing/output_sequence/";
 
-    // 디렉토리 경로와 입력받은 파일명을 결합하여 최종 경로 생성
-    string file1_path = BASE_DIR + argv[1];
-    string file2_path = BASE_DIR + argv[2];
+    auto resolve_path = [&](const string &arg) -> string {
+        ifstream probe(arg);
+        if (probe.good()) return arg;   // 주어진 경로가 곧바로 열리면 사용
+        return BASE_DIR + arg;          // 실패 시 BASE_DIR 접두사 fallback
+    };
+
+    string file1_path = resolve_path(argv[1]);
+    string file2_path = resolve_path(argv[2]);
 
     cout << "=== 데이터 로드 시작 ===" << endl;
     cout << "Target 1: " << file1_path << endl;
