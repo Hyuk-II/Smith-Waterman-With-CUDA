@@ -10,18 +10,15 @@
 
 ## 실행 방법
 
-본 디렉토리에서 직접 실행 가능합니다. 데이터 파일은 **절대 경로 또는 현재 위치 기준 상대 경로**로 지정하세요.
+바이너리를 `1_sw_implement/` 디렉토리로 복사한 뒤 실행하세요.
 
 ```bash
-# (a) 절대 경로
-./sw_cpu /path/to/seq1.txt /path/to/seq2.txt
-
-# (b) 프로젝트 루트 기준 상대 경로
-./sw_cpu ../../0_preprocessing/output_sequence/example_seq1.txt \
-         ../../0_preprocessing/output_sequence/example_seq2.txt
+cp 99_archive/prebuilt_macos_arm64/sw_cpu 1_sw_implement/
+cd 1_sw_implement
+./sw_cpu example_seq1.txt example_seq2.txt
 ```
 
-`example_seq1.txt`처럼 파일명만 전달하면 `../0_preprocessing/output_sequence/` 기본 위치로 fallback이 동작하나, 본 디렉토리에서는 해당 경로가 존재하지 않으므로 실패합니다. 이 단축 형태는 `cd 1_sw_implement` 후 실행할 때만 사용하세요.
+데이터 파일(`example_seq1.txt` 등)은 `0_preprocessing/output_sequence/` 에 위치해야 합니다. `1_sw_implement/`를 CWD로 실행할 때 바이너리가 `../0_preprocessing/output_sequence/` 를 자동으로 참조합니다.
 
 ## macOS GPU 가속 미제공 사유
 
