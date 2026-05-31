@@ -77,8 +77,8 @@ __global__ void sw_kernel_wavefront(int* score_table, const uint8_t* seq1, const
 
         // DP 점수 계산 (GAP_PENALTY는 -2로 고정)
         int diag_score = score_table[(i - 1) * cols + (j - 1)] + match_mis_score;
-        int up_score   = score_table[(i - 1) * cols + j] - 2;
-        int left_score = score_table[i * cols + (j - 1)] - 2;
+        int up_score   = score_table[(i - 1) * cols + j] + GAP_PENALTY;
+        int left_score = score_table[i * cols + (j - 1)] + GAP_PENALTY;
 
         // CUDA 내장 함수로 사용한 최대값 도출 (Clipping to 0)
         int current_score = 0;
@@ -109,7 +109,6 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
 
     // H2D 복사 및 커널 실행 타이머 시작
-    auto start_gpu = high_resolution_clock::now();
 
     // 데이터 Host -> Device 복사
     cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);

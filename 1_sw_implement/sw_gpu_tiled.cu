@@ -122,8 +122,8 @@ __global__ void sw_kernel_tiled(int* score_table, const uint8_t* seq1, const uin
                 int match_mis_score = (idx1 < 20 && idx2 < 20) ? d_BLOSUM62[idx1][idx2] : -4;
 
                 int diag = H_s[i - 1][j - 1] + match_mis_score;
-                int up = H_s[i - 1][j] - 2;
-                int left = H_s[i][j - 1] - 2;
+                int up = H_s[i - 1][j] + GAP_PENALTY;
+                int left = H_s[i][j - 1] + GAP_PENALTY;
 
                 H_s[i][j] = max(0, max(diag, max(up, left)));
             } else {
