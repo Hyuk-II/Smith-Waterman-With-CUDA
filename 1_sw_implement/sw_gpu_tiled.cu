@@ -160,14 +160,14 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     vector<int> h_score_table(table_size, 0);
     int *d_score_table;
     uint8_t *d_seq1, *d_seq2;
-    cudaMalloc(&d_score_table, table_size * sizeof(int));
-    cudaMalloc(&d_seq1, len1 * sizeof(uint8_t));
-    cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
+    CUDA_CHECK(cudaMalloc(&d_score_table, (size_t)table_size * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_seq1, len1 * sizeof(uint8_t)));
+    CUDA_CHECK(cudaMalloc(&d_seq2, len2 * sizeof(uint8_t)));
 
-    cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int));
+    CUDA_CHECK(cudaMemcpy(d_score_table, h_score_table.data(), (size_t)table_size * sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int)));
     
 
     // 블록 단위로 쪼갠 전체 그리드 크기 계산
@@ -186,8 +186,8 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
         sw_kernel_tiled<<<num_blocks_in_diag, TILE_SIZE>>>(d_score_table, d_seq1, d_seq2, len1, len2, cols, bd, num_blocks_row);
     }
     
-    cudaDeviceSynchronize();
-    cudaMemcpy(h_score_table.data(), d_score_table, table_size * sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaDeviceSynchronize());
+    CUDA_CHECK(cudaMemcpy(h_score_table.data(), d_score_table, (size_t)table_size * sizeof(int), cudaMemcpyDeviceToHost));
 
     cudaFree(d_score_table);
     cudaFree(d_seq1);
