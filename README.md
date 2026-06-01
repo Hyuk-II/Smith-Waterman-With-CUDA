@@ -38,8 +38,8 @@ sw_gpu_accelerator/
 │   └── README.md             # 알고리즘 빌드 및 CLI 인수 실행 가이드
 │
 ├── 99_archive/
-│   ├── prebuilt_win_x64_sm89/    # Windows x64 사전 빌드본 (GPU 커널은 sm_89 전용)
-│   ├── prebuilt_linux_x64_sm89/  # Linux x64 사전 빌드본 (GPU 커널은 sm_89 전용)
+│   ├── prebuilt_win_x64_sm89/    # Windows x64 사전 빌드본 (GPU 커널은 sm_89 전용, RTX 4080 Super)
+│   ├── prebuilt_linux_x64_sm89/  # Linux x64 사전 빌드본 (nvcc 기본 arch, PTX JIT 호환, RTX 3080 Ti)
 │   ├── prebuilt_macos_arm64/     # macOS Apple Silicon CPU 베이스라인 사전 빌드본
 │   └── 2021111971_이재혁_SW가속화.pdf  # 프로젝트 제안서
 │
@@ -50,7 +50,8 @@ sw_gpu_accelerator/
 >
 > 동일 환경에서 즉시 실행 가능한 컴파일 산물이 OS별 디렉토리에 보관되어 있습니다. **각 디렉토리 내부의 `README.md`** 에 파일별 런타임 요구사항이 표로 정리되어 있으니, 사용 전 해당 문서를 확인하세요.
 >
-> - GPU 커널(`sw_gpu`, `sw_gpu_tiled`)은 **CUDA Compute Capability 8.9 (RTX 40 시리즈 / Ada Lovelace) 전용**으로 컴파일되어 있습니다. 다른 아키텍처(sm_75, sm_86 등)나 다른 OS 환경에서는 아래 Quick Start의 빌드 명령으로 재컴파일하세요.
+> - **Windows (`prebuilt_win_x64_sm89`)**: RTX 4080 Super (Ada Lovelace) 빌드 머신, `-arch=sm_89` 지정 컴파일 — **sm_89 (RTX 40 시리즈) 전용**. 다른 아키텍처에서는 재컴파일 필요.
+> - **Linux (`prebuilt_linux_x64_sm89`)**: RTX 3080 Ti (Ampere) 빌드 머신, `-arch` 플래그 미지정 — CUDA 기본 arch + PTX 포함으로 **대부분의 CUDA GPU에서 JIT 실행 가능**.
 > - macOS는 CUDA를 공식 지원하지 않으므로 GPU 커널 바이너리는 제공되지 않습니다 (CPU 베이스라인만 제공).
 
 ## 🛠️ 4. Quick Start (OS별 빌드 가이드)

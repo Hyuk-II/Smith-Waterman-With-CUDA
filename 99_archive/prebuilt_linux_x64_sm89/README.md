@@ -1,6 +1,9 @@
 # Linux x64 사전 빌드본
 
-빌드 환경: **Linux x86-64 + CUDA Toolkit (`-arch=sm_89`, `-O3`)**
+빌드 환경: **Linux x86-64 + CUDA Toolkit (`nvcc`, `-arch` 미지정 — PTX JIT 호환)**
+빌드 머신 GPU: **NVIDIA GeForce RTX 3080 Ti** (Ampere, sm_86)
+
+> ℹ️ `-arch` 플래그를 지정하지 않고 컴파일된 바이너리입니다. CUDA 기본 아키텍처 + PTX가 포함되어 있어 대부분의 CUDA GPU에서 JIT 컴파일로 실행 가능합니다.
 
 ## 파일별 런타임 요구사항
 
@@ -11,7 +14,7 @@
 | `sw_gpu` | CUDA GPU | Linux x86-64 + NVIDIA Driver + CUDA Runtime, **Compute Capability 8.9** (RTX 40 시리즈 / Ada Lovelace) |
 | `sw_gpu_tiled` | CUDA GPU | Linux x86-64 + NVIDIA Driver + CUDA Runtime, **Compute Capability 8.9** (RTX 40 시리즈 / Ada Lovelace) |
 
-> ⚠️ `sw_gpu`, `sw_gpu_tiled`는 sm_89 전용으로 컴파일되어 있습니다. RTX 30/20 등 다른 아키텍처에서는 `no kernel image available for execution on the device` 오류가 발생할 수 있으므로, 루트 `README.md`의 Quick Start를 참고하여 해당 GPU의 `-arch` 값으로 재컴파일하세요.
+> ℹ️ PTX 포함 빌드이므로 sm_89 전용이 아닙니다. 다양한 CUDA GPU에서 JIT 컴파일로 실행 가능하나, CUDA 버전 호환성에 따라 실행이 불가할 수 있습니다. 문제 발생 시 루트 `README.md`의 Quick Start를 참고하여 재컴파일하세요.
 
 ## 실행 방법
 
