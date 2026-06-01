@@ -111,17 +111,17 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     // Device 메모리 할당
     int *d_score_table;
     uint8_t *d_seq1, *d_seq2;
-    cudaMalloc(&d_score_table, table_size * sizeof(int));
-    cudaMalloc(&d_seq1, len1 * sizeof(uint8_t));
-    cudaMalloc(&d_seq2, len2 * sizeof(uint8_t));
+    CUDA_CHECK(cudaMalloc(&d_score_table, (size_t)table_size * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_seq1, len1 * sizeof(uint8_t)));
+    CUDA_CHECK(cudaMalloc(&d_seq2, len2 * sizeof(uint8_t)));
 
     // 데이터 Host -> Device 복사
-    cudaMemcpy(d_score_table, h_score_table.data(), table_size * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_score_table, h_score_table.data(), (size_t)table_size * sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_seq1, seq1_int.data(), len1 * sizeof(uint8_t), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_seq2, seq2_int.data(), len2 * sizeof(uint8_t), cudaMemcpyHostToDevice));
     
     // BLOSUM62 상수 메모리 복사
-    cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int));
+    CUDA_CHECK(cudaMemcpyToSymbol(d_BLOSUM62, BLOSUM62, 20 * 20 * sizeof(int)));
 
     // Wavefront 커널 실행, 대각선 개수만큼 루프
     int num_diagonals = len1 + len2 - 1;
@@ -144,10 +144,10 @@ SWResult smith_waterman_gpu(const vector<uint8_t>& seq1_int, const vector<uint8_
     }
     
     // GPU 작업 완료 대기
-    cudaDeviceSynchronize();
+    CUDA_CHECK(cudaDeviceSynchronize());
 
     // 데이터 Device -> Host 복사
-    cudaMemcpy(h_score_table.data(), d_score_table, table_size * sizeof(int), cudaMemcpyDeviceToHost);
+    CUDA_CHECK(cudaMemcpy(h_score_table.data(), d_score_table, (size_t)table_size * sizeof(int), cudaMemcpyDeviceToHost));
 
     // Device 메모리 해제
     cudaFree(d_score_table);

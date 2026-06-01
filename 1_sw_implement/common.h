@@ -1,11 +1,10 @@
-﻿#pragma once
+#pragma once
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <cstdint>
 #include <string>
 #include <vector>
-using namespace std;
 
 // smith waterman 연산의 결과
 struct SWResult {
@@ -16,6 +15,19 @@ struct SWResult {
 };
 
 const int GAP_PENALTY = -2;
+
+#ifdef __CUDACC__
+#define CUDA_CHECK(call)                                                        \
+    do {                                                                        \
+        cudaError_t _err = (call);                                              \
+        if (_err != cudaSuccess) {                                              \
+            std::cerr << "[CUDA ERROR] " << cudaGetErrorString(_err)            \
+                      << " (" << __FILE__ << ":" << __LINE__ << ")"             \
+                      << std::endl;                                             \
+            exit(EXIT_FAILURE);                                                 \
+        }                                                                       \
+    } while (0)
+#endif
 
 // SequenceCodec의 "ARNDCQEGHILKMFPSTWYV" 순서에 매핑된 BLOSUM62 행렬
 const int BLOSUM62[20][20] = {
@@ -45,65 +57,65 @@ const int BLOSUM62[20][20] = {
      -1, -2, -1, 3,  -3, -2, -2, 2,  7, -1},
     {0, -3, -3, -3, -1, -2, -2, -3, -3, 3, 1, -2, 1, -1, -2, -2, 0, -3, -1, 4}};
 
-vector<string> get_sequences(char *argv[]) {
-    vector<string> sequences;
+std::vector<std::string> get_sequences(char *argv[]) {
+    std::vector<std::string> sequences;
 
     // 기본 데이터 위치: 소스 트리에서 1_sw_implement를 CWD로 실행할 때의 fallback
     // 절대 경로나 다른 상대 경로를 인자로 주면 그대로 사용
-    const string BASE_DIR = "../0_preprocessing/output_sequence/";
+    const std::string BASE_DIR = "../0_preprocessing/output_sequence/";
 
-    auto resolve_path = [&](const string &arg) -> string {
-        ifstream probe(arg);
+    auto resolve_path = [&](const std::string &arg) -> std::string {
+        std::ifstream probe(arg);
         if (probe.good()) return arg;   // 주어진 경로가 곧바로 열리면 사용
         return BASE_DIR + arg;          // 실패 시 BASE_DIR 접두사 fallback
     };
 
-    string file1_path = resolve_path(argv[1]);
-    string file2_path = resolve_path(argv[2]);
+    std::string file1_path = resolve_path(argv[1]);
+    std::string file2_path = resolve_path(argv[2]);
 
-    cout << "=== 데이터 로드 시작 ===" << endl;
-    cout << "Target 1: " << file1_path << endl;
-    cout << "Target 2: " << file2_path << endl;
+    std::cout << "=== 데이터 로드 시작 ===" << std::endl;
+    std::cout << "Target 1: " << file1_path << std::endl;
+    std::cout << "Target 2: " << file2_path << std::endl;
 
     // 첫 번째 서열 파일 읽기
-    ifstream in1(file1_path);
+    std::ifstream in1(file1_path);
     if (!in1.is_open()) {
-        cerr << "[에러] 파일을 열 수 없습니다. 파일명을 다시 확인하세요: "
-             << file1_path << endl;
+        std::cerr << "[에러] 파일을 열 수 없습니다. 파일명을 다시 확인하세요: "
+                  << file1_path << std::endl;
         return sequences;
     }
-    string seq1;
+    std::string seq1;
     in1 >> seq1;
     in1.close();
 
     // 두 번째 서열 파일 읽기
-    ifstream in2(file2_path);
+    std::ifstream in2(file2_path);
     if (!in2.is_open()) {
-        cerr << "[에러] 파일을 열 수 없습니다. 파일명을 다시 확인하세요: "
-             << file2_path << endl;
+        std::cerr << "[에러] 파일을 열 수 없습니다. 파일명을 다시 확인하세요: "
+                  << file2_path << std::endl;
         return sequences;
     }
-    string seq2;
+    std::string seq2;
     in2 >> seq2;
     in2.close();
 
     // 로드된 데이터 검증 출력
-    cout << "\n=== 데이터 로드 완료 ===" << endl;
+    std::cout << "\n=== 데이터 로드 완료 ===" << std::endl;
 
     // 첫 번째 서열 출력
-    cout << "[Seq 1] 길이: " << seq1.length() << " AA" << endl;
+    std::cout << "[Seq 1] 길이: " << seq1.length() << " AA" << std::endl;
     if (seq1.length() > 50) {
-        cout << "내용(Preview): " << seq1.substr(0, 50) << "..." << endl;
+        std::cout << "내용(Preview): " << seq1.substr(0, 50) << "..." << std::endl;
     } else {
-        cout << "내용: " << seq1 << endl;
+        std::cout << "내용: " << seq1 << std::endl;
     }
 
     // 두 번째 서열 출력
-    cout << "\n[Seq 2] 길이: " << seq2.length() << " AA" << endl;
+    std::cout << "\n[Seq 2] 길이: " << seq2.length() << " AA" << std::endl;
     if (seq2.length() > 50) {
-        cout << "내용(Preview): " << seq2.substr(0, 50) << "..." << endl;
+        std::cout << "내용(Preview): " << seq2.substr(0, 50) << "..." << std::endl;
     } else {
-        cout << "내용: " << seq2 << endl;
+        std::cout << "내용: " << seq2 << std::endl;
     }
 
     sequences.push_back(seq1);
@@ -113,17 +125,17 @@ vector<string> get_sequences(char *argv[]) {
 }
 
 // 2개의 문자열의 score_table에서, 가장 유사한 문자열을 추적하여 출력하는 함수
-void run_traceback(const SWResult &result, const string &seq1,
-                   const string &seq2, const vector<uint8_t> &seq1_int,
-                   const vector<uint8_t> &seq2_int) {
-    cout << "\n=== 트레이스백 (Traceback) 시작 ===" << endl;
+void run_traceback(const SWResult &result, const std::string &seq1,
+                   const std::string &seq2, const std::vector<uint8_t> &seq1_int,
+                   const std::vector<uint8_t> &seq2_int) {
+    std::cout << "\n=== 트레이스백 (Traceback) 시작 ===" << std::endl;
 
     // DP 테이블 1차원 인덱싱 람다
     int cols = seq2_int.size() + 1;
     auto get_idx = [&](int r, int c) { return r * cols + c; };
 
-    string align1 = "";
-    string align2 = "";
+    std::string align1 = "";
+    std::string align2 = "";
 
     int curr_i = result.max_i;
     int curr_j = result.max_j;
@@ -168,11 +180,11 @@ void run_traceback(const SWResult &result, const string &seq1,
         }
     }
 
-    reverse(align1.begin(), align1.end());
-    reverse(align2.begin(), align2.end());
+    std::reverse(align1.begin(), align1.end());
+    std::reverse(align2.begin(), align2.end());
 
-    cout << "\n[최적 로컬 정렬 결과]" << endl;
-    cout << "Seq 1: " << align1 << endl;
-    cout << "Seq 2: " << align2 << endl;
-    cout << "정렬 길이: " << align2.length() << " AA\n" << endl;
+    std::cout << "\n[최적 로컬 정렬 결과]" << std::endl;
+    std::cout << "Seq 1: " << align1 << std::endl;
+    std::cout << "Seq 2: " << align2 << std::endl;
+    std::cout << "정렬 길이: " << align2.length() << " AA\n" << std::endl;
 }
