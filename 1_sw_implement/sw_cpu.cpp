@@ -1,9 +1,10 @@
 #include "common.h"
 #include "sequence_codec.h"
 
-#include <cstdint>
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -42,11 +43,15 @@ int main(int argc, char *argv[]) {
 
     duration<double, std::milli> dp_ms = end_dp - start_dp;
 
+    double gcups =
+        ((double)seq1_int.size() * seq2_int.size()) / (dp_ms.count() * 1e6);
+
     cout << "\n========================================" << endl;
     cout << " [ CPU 벤치마크 결과 요약 ]" << endl;
     cout << "----------------------------------------" << endl;
-    cout << " 최대 정렬 점수 : " << result.max_score << endl;
-    cout << " 점수 테이블 연산 : " << dp_ms.count() << " ms" << endl;
+    cout << " 최대 정렬 점수\t\t: " << result.max_score << endl;
+    cout << " 점수 테이블 연산\t: " << dp_ms.count() << " ms" << endl;
+    cout << " GCUPS\t\t\t: " << fixed << setprecision(3) << gcups << endl;
     cout << "========================================\n" << endl;
 
     return 0;

@@ -1,6 +1,7 @@
 # Windows x64 사전 빌드본
 
 빌드 환경: **Windows x86-64 + CUDA Toolkit (`-arch=sm_89`, `-O3`), "x64 Native Tools Command Prompt"**
+빌드 머신 GPU: **NVIDIA GeForce RTX 4080 Super** (Ada Lovelace, sm_89)
 
 ## 파일별 런타임 요구사항
 

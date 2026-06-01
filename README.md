@@ -38,8 +38,8 @@ sw_gpu_accelerator/
 │   └── README.md             # 알고리즘 빌드 및 CLI 인수 실행 가이드
 │
 ├── 99_archive/
-│   ├── prebuilt_win_x64_sm89/    # Windows x64 사전 빌드본 (GPU 커널은 sm_89 전용)
-│   ├── prebuilt_linux_x64_sm89/  # Linux x64 사전 빌드본 (GPU 커널은 sm_89 전용)
+│   ├── prebuilt_win_x64_sm89/    # Windows x64 사전 빌드본 (GPU 커널은 sm_89 전용, RTX 4080 Super)
+│   ├── prebuilt_linux_x64/  # Linux x64 사전 빌드본 (nvcc 기본 arch, PTX JIT 호환, RTX 3080 Ti)
 │   ├── prebuilt_macos_arm64/     # macOS Apple Silicon CPU 베이스라인 사전 빌드본
 │   └── 2021111971_이재혁_SW가속화.pdf  # 프로젝트 제안서
 │
@@ -50,7 +50,8 @@ sw_gpu_accelerator/
 >
 > 동일 환경에서 즉시 실행 가능한 컴파일 산물이 OS별 디렉토리에 보관되어 있습니다. **각 디렉토리 내부의 `README.md`** 에 파일별 런타임 요구사항이 표로 정리되어 있으니, 사용 전 해당 문서를 확인하세요.
 >
-> - GPU 커널(`sw_gpu`, `sw_gpu_tiled`)은 **CUDA Compute Capability 8.9 (RTX 40 시리즈 / Ada Lovelace) 전용**으로 컴파일되어 있습니다. 다른 아키텍처(sm_75, sm_86 등)나 다른 OS 환경에서는 아래 Quick Start의 빌드 명령으로 재컴파일하세요.
+> - **Windows (`prebuilt_win_x64_sm89`)**: RTX 4080 Super (Ada Lovelace) 빌드 머신, `-arch=sm_89` 지정 컴파일 — **sm_89 (RTX 40 시리즈) 전용**. 다른 아키텍처에서는 재컴파일 필요.
+> - **Linux (`prebuilt_linux_x64_sm89`)**: RTX 3080 Ti (Ampere) 빌드 머신, `-arch` 플래그 미지정 — CUDA 기본 arch + PTX 포함으로 **대부분의 CUDA GPU에서 JIT 실행 가능**.
 > - macOS는 CUDA를 공식 지원하지 않으므로 GPU 커널 바이너리는 제공되지 않습니다 (CPU 베이스라인만 제공).
 
 ## 🛠️ 4. Quick Start (OS별 빌드 가이드)
@@ -111,10 +112,10 @@ g++ -std=c++17 -fexec-charset=cp949 sw_cpu.cpp -o sw_cpu.exe
 > 3. 소스코드 내부의 주석을 파싱하는 과정에서 인코딩 충돌이 발생하지 않도록, `1_sw_implement` 내의 모든 헤더(`.h`)와 코드(`.cu`) 파일은 **UTF-8 with BOM** 형식으로 저장하거나 영어로 작성할 것을 권장합니다.
 > 4. `nvcc`에 `-Xcompiler "/utf-8"` 옵션을 추가하면 사용자 코드는 정상 파싱되지만, NVIDIA 내부 헤더 파싱 중 충돌을 일으킬 수 있으므로 **기본 명령어만 사용하는 것을 권장**합니다.
 
-**🐧 Linux 환경** (아키텍처에 맞게 `-arch` 수정)
+**🐧 Linux 환경** (GPU 아키텍처에 맞게 `-arch` 수정 — 예: RTX 30 시리즈는 `sm_86`, RTX 40 시리즈는 `sm_89`)
 
 ```bash
-nvcc -std=c++17 -arch=sm_89 -O3 sw_gpu_tiled.cu -o sw_gpu_tiled
+nvcc -std=c++17 -arch=sm_86 -O3 sw_gpu_tiled.cu -o sw_gpu_tiled
 ./sw_gpu_tiled example_seq1.txt example_seq2.txt
 ```
 
@@ -132,3 +133,15 @@ nvcc -std=c++17 -arch=sm_89 -O3 sw_gpu_tiled.cu -o sw_gpu_tiled.exe
 1. **GCUPS (Giga Cell Updates Per Second):** 초당 셀 계산량 (CPU 대비 전체 알고리즘의 실질적 가속비)
 2. **Memory Bandwidth:** 전역 메모리 vs 공유 메모리 도입에 따른 대역폭 포화도 (Nsight Compute 활용)
 3. **Hardware Occupancy:** 파도타기 비효율 구간(유휴 스레드)을 상쇄하기 위한 SM 스케줄링 점유율 분석
+
+### 📈 벤치마크 결과 (약 2,000 × 2,000 AA — RTX 3080 Ti / Linux)
+
+| 구현 | 연산 시간 | GCUPS | CPU 대비 |
+|---|---|---|---|
+| `sw_cpu` (CPU Baseline) | 242.9 ms | 0.018 | 1× |
+| `sw_gpu` (Wavefront GPU) | 60.3 ms | 0.072 | **4.0×** |
+| `sw_gpu_tiled` (Shared Memory Tiling) | 48.7 ms | 0.089 | **5.0×** |
+
+> ℹ️ **측정 방법:** `cudaFree(0)` warmup 호출로 CUDA context 초기화 패널티를 타이머 밖으로 배제 후 측정. GPU 시간은 H2D 복사 + 커널 실행 + D2H 복사 전체 파이프라인 포함.
+>
+> **Tiled GPU vs Wavefront GPU (1.24×):** Shared Memory Tiling은 커널 런치 횟수를 ~3,999회 → ~125회로 줄이고 DRAM 접근을 코어레싱에 유리하게 재구성합니다. 서열 길이가 길어질수록 격차는 더 커집니다.
