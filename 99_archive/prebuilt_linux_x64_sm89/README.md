@@ -7,6 +7,7 @@
 | 파일 | 종류 | 런타임 요구사항 |
 |---|---|---|
 | `preprocessor` | CPU only | Linux x86-64 |
+| `sw_cpu` | CPU only | Linux x86-64 |
 | `sw_gpu` | CUDA GPU | Linux x86-64 + NVIDIA Driver + CUDA Runtime, **Compute Capability 8.9** (RTX 40 시리즈 / Ada Lovelace) |
 | `sw_gpu_tiled` | CUDA GPU | Linux x86-64 + NVIDIA Driver + CUDA Runtime, **Compute Capability 8.9** (RTX 40 시리즈 / Ada Lovelace) |
 

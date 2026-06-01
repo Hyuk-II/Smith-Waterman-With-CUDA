@@ -6,6 +6,7 @@
 
 | 파일 | 종류 | 런타임 요구사항 |
 |---|---|---|
+| `preprocessor` | CPU only | macOS arm64 (Apple Silicon: M1/M2/M3/M4 등) |
 | `sw_cpu` | CPU only | macOS arm64 (Apple Silicon: M1/M2/M3/M4 등) |
 
 ## 실행 방법
