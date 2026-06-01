@@ -134,14 +134,16 @@ nvcc -std=c++17 -arch=sm_89 -O3 sw_gpu_tiled.cu -o sw_gpu_tiled.exe
 2. **Memory Bandwidth:** 전역 메모리 vs 공유 메모리 도입에 따른 대역폭 포화도 (Nsight Compute 활용)
 3. **Hardware Occupancy:** 파도타기 비효율 구간(유휴 스레드)을 상쇄하기 위한 SM 스케줄링 점유율 분석
 
-### 📈 벤치마크 결과 (약 2,000 × 2,000 AA — RTX 3080 Ti / Linux)
+### 📈 벤치마크 결과 (TITIN_MOUSE × TITIN_HUMAN — 35,213 × 34,350 AA — RTX 3080 Ti / Linux)
+
+Titin은 알려진 단백질 중 최대 크기(~35,000 AA)로, 스코어 테이블 크기 약 4.5 GB의 실전 규모 벤치마크입니다.
 
 | 구현 | 연산 시간 | GCUPS | CPU 대비 |
 |---|---|---|---|
-| `sw_cpu` (CPU Baseline) | 242.9 ms | 0.018 | 1× |
-| `sw_gpu` (Wavefront GPU) | 60.3 ms | 0.072 | **4.0×** |
-| `sw_gpu_tiled` (Shared Memory Tiling) | 48.7 ms | 0.089 | **5.0×** |
+| `sw_cpu` (CPU Baseline) | 70,117 ms | 0.017 | 1× |
+| `sw_gpu` (Wavefront GPU) | 20,386 ms | 0.059 | **3.4×** |
+| `sw_gpu_tiled` (Shared Memory Tiling) | 15,310 ms | 0.079 | **4.6×** |
 
-> ℹ️ **측정 방법:** `cudaFree(0)` warmup 호출로 CUDA context 초기화 패널티를 타이머 밖으로 배제 후 측정. GPU 시간은 H2D 복사 + 커널 실행 + D2H 복사 전체 파이프라인 포함.
+> ℹ️ **측정 방법:** `cudaFree(0)` warmup 호출로 CUDA context 초기화 패널티를 타이머 밖으로 배제 후 측정. GPU 시간은 H2D 복사 + 커널 실행 + D2H 복사 전체 파이프라인 포함. 세 구현 모두 최대 정렬 점수 **165,624**, 정렬 길이 **35,318 AA**로 일치하여 병렬화 정확도 검증 완료.
 >
-> **Tiled GPU vs Wavefront GPU (1.24×):** Shared Memory Tiling은 커널 런치 횟수를 ~3,999회 → ~125회로 줄이고 DRAM 접근을 코어레싱에 유리하게 재구성합니다. 서열 길이가 길어질수록 격차는 더 커집니다.
+> **Tiled GPU vs Wavefront GPU (1.33×):** 이 규모에서 sw_gpu는 커널 런치 **69,562회**, sw_gpu_tiled는 **~2,172회** (32×32 타일 블록 단위). 스코어 테이블이 4.5 GB로 GPU L2 캐시(6 MB)를 압도하므로 모든 접근이 DRAM에서 이루어지며, Tiling의 coalesced 접근 패턴이 대역폭 효율을 높여 격차를 만들어냅니다.
