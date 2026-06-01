@@ -39,8 +39,10 @@ sw_gpu_accelerator/
 │
 ├── 99_archive/
 │   ├── prebuilt_win_x64_sm89/    # Windows x64 사전 빌드본 (GPU 커널은 sm_89 전용, RTX 4080 Super)
-│   ├── prebuilt_linux_x64/  # Linux x64 사전 빌드본 (nvcc 기본 arch, PTX JIT 호환, RTX 3080 Ti)
+│   ├── prebuilt_linux_x64/       # Linux x64 사전 빌드본 (nvcc 기본 arch, PTX JIT 호환, RTX 3080 Ti)
 │   ├── prebuilt_macos_arm64/     # macOS Apple Silicon CPU 베이스라인 사전 빌드본
+│   ├── screenshots/              # 벤치마크 실행 결과 터미널 캡처 보관
+│   ├── profiling/                # Nsight Compute 프로파일 데이터 및 uint8_t vs int 비교 이미지
 │   └── 2021111971_이재혁_SW가속화.pdf  # 프로젝트 제안서
 │
 └── README.md                 # 프로젝트 최상위 개요 (본 문서)
