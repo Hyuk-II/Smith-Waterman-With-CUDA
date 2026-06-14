@@ -12,6 +12,7 @@
 0_preprocessing/preprocessor.exe
 1_sw_implement/sw_cpu
 1_sw_implement/sw_cpu.exe
+1_sw_implement/sw_cpp.exe
 1_sw_implement/sw_gpu
 1_sw_implement/sw_gpu.exe
 1_sw_implement/sw_gpu_tiled
@@ -24,7 +25,13 @@
 1_sw_implement/*.pdb
 build/
 
+# Nsight Compute 프로파일 리포트 (대용량, 로컬 분석용)
+*.ncu-rep
+
 # 3. macOS 시스템 파일 무시
 .DS_Store
 **/.DS_Store
 .vscode/
+
+**2021111971_이재혁_프로젝트보고서.docx
+보고서.md
