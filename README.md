@@ -17,6 +17,14 @@
 - **Decoupled Preprocessing:** 대용량 FASTA 파일(테스트 데이터 출처: [UniProt](https://www.uniprot.org/), [NCBI](https://www.ncbi.nlm.nih.gov/))에서 헤더와 기호를 제거하고 순수 염기/아미노산 서열만 추출하는 C++17 파서 구축.
 - **ASCII 직접 참조 인코딩 ($O(1)$ Look-up):** GPU Branch를 막기 위해, 알파벳을 즉시 1바이트 숫자(`uint8_t`)로 변환하는 하드웨어 친화적 인코더 설계.
 
+### 🌊 병렬화 가능성: 타일 내부 웨이브프론트 (Tile-Interior Wavefront)
+
+<p align="center">
+  <img src="99_archive/benchmark_results/tiled_interior.png" width="420" alt="타일 내부 웨이브프론트 진행 도식">
+</p>
+
+> **Figure.** 32×32 타일 내부에서 반대각선($i+j=k$)을 따라 진행하는 마이크로 웨이브프론트. 같은 반대각선 위의 셀들은 서로 의존성이 없어 **동시에 병렬 계산**(주황색, 한 스텝에 4개 셀)되고, 다음 스텝으로 파도처럼 전진한다. 빨간색 **경계(halo)** 셀은 인접 타일의 계산 결과(위쪽 행·왼쪽 열)를 공유 메모리로 받아와 타일 간 의존성을 잇는다. 이 구조가 SW의 셀 단위 순차 의존성(O(mn) 스텝)을 반대각선 단위(**O(m+n) 스텝**)로 바꿔 GPU 병렬화를 가능하게 하는 핵심이다.
+
 ## 📂 3. 디렉토리 구조 (Directory Structure)
 
 본 프로젝트는 유지보수성과 확장성에 집중하기 위해 핵심 연산 로직과 공통 유틸리티 함수를 분리하여, 모듈화 아키텍처를 채택하고 있습니다.
@@ -112,7 +120,7 @@ g++ -std=c++17 -fexec-charset=cp949 sw_cpu.cpp -o sw_cpu.exe
 > 1. 반드시 **"x64 Native Tools Command Prompt"** 터미널을 사용하여 64비트 컴파일 환경을 구성해야 합니다. (일반 cmd나 x86 터미널 사용 시 `ACCESS_VIOLATION` 에러 발생, CUDA Toolkit은 공식적으로 32비트 환경을 지원하지 않습니다.)
 > 2. 경로에 한글이나 공백이 포함되어 있으면 CUDA 컴파일러 프론트엔드(`cudafe++`)가 비정상 종료될 수 있습니다. 프로젝트 폴더는 순수 영문 경로(예: `C:\CUDA_Projects\...`)에 위치해야 합니다.
 > 3. 소스코드 내부의 주석을 파싱하는 과정에서 인코딩 충돌이 발생하지 않도록, `1_sw_implement` 내의 모든 헤더(`.h`)와 코드(`.cu`) 파일은 **UTF-8 with BOM** 형식으로 저장하거나 영어로 작성할 것을 권장합니다.
-> 4. `nvcc`에 `-Xcompiler "/utf-8"` 옵션을 추가하면 사용자 코드는 정상 파싱되지만, NVIDIA 내부 헤더 파싱 중 충돌을 일으킬 수 있으므로 **기본 명령어만 사용하는 것을 권장**합니다.
+> 4. 한글 콘솔 출력이 깨진다면 `-Xcompiler /utf-8` 로 빌드하고 콘솔을 `chcp 65001` 로 맞추면 됩니다(아래 **🈶 Windows 한글 출력 깨짐 방지** 섹션 참고). CUDA 12.9 + 최신 MSVC에서는 대개 문제없으나, 드물게 NVIDIA 내부 헤더 파싱과 충돌하면 `-Xcompiler /source-charset:utf-8,/execution-charset:.949` (콘솔 `chcp 949`)로 대체합니다.
 
 **🐧 Linux 환경** (GPU 아키텍처에 맞게 `-arch` 수정 — 예: RTX 30 시리즈는 `sm_86`, RTX 40 시리즈는 `sm_89`)
 
@@ -127,6 +135,21 @@ nvcc -std=c++17 -arch=sm_86 -O3 sw_gpu_tiled.cu -o sw_gpu_tiled
 nvcc -std=c++17 -arch=sm_89 -O3 sw_gpu_tiled.cu -o sw_gpu_tiled.exe
 .\sw_gpu_tiled.exe example_seq1.txt example_seq2.txt
 ```
+
+#### 🈶 Windows 한글 출력 깨짐 방지 (UTF-8 빌드)
+
+기본 빌드 시 Windows 콘솔(CP949)과 소스(UTF-8) 인코딩 충돌로 한글 출력(`=== 데이터 로드 시작 ===` 등)이 깨질 수 있습니다. `-Xcompiler /utf-8` 로 빌드하고 콘솔을 UTF-8(`chcp 65001`)로 맞추면 정상 출력됩니다. (Nsight Compute 프로파일링 시에도 동일 바이너리를 쓰므로 화면 한글이 함께 정상화됩니다.)
+
+```cmd
+nvcc -std=c++17 -arch=sm_89 -O3 -lineinfo -Xcompiler /utf-8 sw_gpu_tiled.cu -o sw_gpu_tiled.exe
+chcp 65001
+.\sw_gpu_tiled.exe example_seq1.txt example_seq2.txt
+```
+
+- `-Xcompiler /utf-8` : 호스트 컴파일러(MSVC)에 `/utf-8` 전달 → C4819 경고 제거 + 출력 UTF-8화
+- `chcp 65001` : 콘솔 코드페이지를 UTF-8로 (터미널 세션마다 재설정 필요)
+- `-lineinfo` : 프로파일링(ncu) 시 소스 라인 분석용. 일반 실행만 할 거면 생략 가능 (`-G`는 최적화가 꺼지므로 프로파일링에 금지)
+- 만약 `/utf-8`이 NVIDIA 헤더 파싱과 충돌하면, 대안으로 `-Xcompiler /source-charset:utf-8,/execution-charset:.949` (콘솔은 `chcp 949`) 사용
 
 ## 📊 5. Evaluation Metrics
 
