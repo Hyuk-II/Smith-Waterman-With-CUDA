@@ -22,7 +22,7 @@
 
 ### [검증] 하드웨어 프로파일링 분석: uint8_t vs int
 
-![alt text](../99_archive/profiling/image.png)
+![alt text](../99_archive/profiling/int_vs_uint8.png)
 uint8_t(1바이트)와 표준 int(4바이트)를 사용했을 때 실제 메모리 효율성 차이를 증명하기 위해 Nsight Compute 프로파일러를 활용하여 DRAM 읽기량(dram\_\_bytes_read.sum)을 측정했습니다.
 
 Figure. 1차원 Grid 1x1 커널의 DRAM Read Bytes 비교
